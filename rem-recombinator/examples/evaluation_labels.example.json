@@ -1,0 +1,9 @@
+{
+  "note": "Judgments for fragment ids already in the database. An empty file only prints the banner. Filling it in does not change REM_* defaults.",
+  "bridge": [],
+  "analogy": [],
+  "dialectic": [],
+  "novelty": [],
+  "critiques": [],
+  "holdout": []
+}

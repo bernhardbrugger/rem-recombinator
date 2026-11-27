@@ -22,6 +22,9 @@ pip install -r requirements.txt
 cp .env.example .env
 pytest
 python -m rem_recombinator import examples/sample_memory_export.json --embedder hashing
+python -m rem_recombinator evaluate examples/evaluation_labels.example.json
 ```
+
+`evaluate` reports precision and recall for the similarity thresholds. It does not change the defaults.
 
 `.env`, `*.db`, and `memories/*.json` are gitignored. API keys stay local.

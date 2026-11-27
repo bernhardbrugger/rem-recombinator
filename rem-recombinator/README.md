@@ -192,6 +192,7 @@ python -m rem_recombinator stats
 python -m rem_recombinator export --format markdown --output run.md
 python -m rem_recombinator lineage 1
 python -m rem_recombinator diagnose --seed 0
+python -m rem_recombinator evaluate examples/evaluation_labels.example.json
 ```
 
 `python cli.py …` is the same entry point. A live run is:
@@ -249,15 +250,15 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-The suite covers store migration, cosine edge cases, all three selectors, critic parsing (including fenced JSON and the dimension floor), the novelty gate, lineage, redaction of `sk-ant-…` in stored errors, seed import from JSON and zip, the CLI, and the MCP handlers. Embeddings and model payloads are fixtures. Twenty-five tests, no network.
+The suite covers store migration, cosine edge cases, all three selectors, critic parsing (including fenced JSON and the dimension floor), the novelty gate, lineage, redaction of `sk-ant-…` in stored errors, seed import from JSON and zip, the threshold report, the CLI, and the MCP handlers. Embeddings and model payloads are fixtures. No network.
 
 ## Limits, and what to measure next
 
 - Leader clustering is greedy and id-ordered. A spherical k-means (or any method with a stability check across seeds) is the replacement once the corpus is large enough that the enumeration cap starts sampling.
 - Opposition cues miss paraphrased contradictions and fire on accidental word matches. A next experiment is a small hand-labeled set of genuine conflicts, then a comparison of cue precision against a model that only labels “conflict / no conflict”.
-- The 0.88 / 0.05 / 0.35 thresholds are declared defaults, not fitted constants. Calibrate them on pairs a reader has marked useful or vacuous, and publish the resulting precision-recall, not a new magic number in the code without that table.
-- Critic scores need a human inter-rater study before they are treated as measurements. Until then they are structured judgments from one pinned model.
-- A held-out fragment test would ask whether accepted hypotheses predict text the model was not shown. That is the result that would make the composite more than a filter.
+- The 0.88 / 0.05 / 0.35 thresholds are still declared defaults. `evaluate` scores a label file (bridge, analogy, dialectic, novelty status, critic axes, midpoint hold-out) and prints the best F1 on that file. It does not write a new default. Publish the table with the labels; change `REM_*` only in a later commit that cites that table.
+- Critic scores need a human inter-rater study before they are treated as measurements. The report's MAE is only as good as the gold file.
+- The midpoint hold-out checks a geometric claim: the fragment you withheld should be the nearest neighbour of the parent midpoint. It does not show that an accepted sentence predicts unseen text. That still needs a reader.
 - The store interface is the seam for pgvector. Nothing in `recombinator.py` depends on SQLite beyond the `Store` methods.
 - Provider text at temperature 0 can still change between deploys. Store the model id, which this already does, and treat a model upgrade as a new experiment, not a continuation.
 

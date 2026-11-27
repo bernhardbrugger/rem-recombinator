@@ -18,6 +18,15 @@ from rem_recombinator.embeddings import cosine_similarity
 from rem_recombinator.models import Fragment, NoveltyDecision
 
 
+def status_from_nearest(nearest: float, *, ceiling: float, floor: float) -> str:
+    """Same rule the filter uses, so a threshold sweep cannot drift from it."""
+    if nearest > ceiling:
+        return "too_similar"
+    if nearest < floor:
+        return "incoherent"
+    return "kept"
+
+
 def assess_novelty(
     hypothesis: np.ndarray,
     fragments: list[Fragment],
@@ -40,12 +49,7 @@ def assess_novelty(
         if similarity > nearest:
             nearest = similarity
             nearest_id = fragment.id
-    if nearest > ceiling:
-        status = "too_similar"
-    elif nearest < floor:
-        status = "incoherent"
-    else:
-        status = "kept"
+    status = status_from_nearest(nearest, ceiling=ceiling, floor=floor)
     return NoveltyDecision(
         status=status,
         novelty_score=1.0 - max(nearest, 0.0),
