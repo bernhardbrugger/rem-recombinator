@@ -1,0 +1,19 @@
+{
+  "conversations_memory": "Researchers keep a lab notebook so that a later reader can replay the conditions of an experiment.\n\nA claim without an observation that could refute it is not yet a hypothesis.",
+  "project_memories": {
+    "thermo-notes": "Closed systems always increase entropy when heat flows in and no work leaves.\n\nOpen systems can export entropy and so decrease it locally."
+  },
+  "memory_files": [
+    {
+      "path": "/physics/thermo.md",
+      "content": "- [stated] Heat always increases entropy in an isolated system.\n- [stated] A feedback controller can decrease variance around a set point.",
+      "updated_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "path": "/biology/selection.md",
+      "content": "- [stated] Selection pressure can shrink diversity inside a local niche.",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  ],
+  "account_uuid": "example-not-a-real-export"
+}

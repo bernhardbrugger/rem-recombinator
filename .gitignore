@@ -7,3 +7,19 @@ venv/
 *.db
 *.sqlite
 *.sqlite3
+
+# Personal research exports and runtime stores. Patterns are rooted at the
+# repository root and repeated for the package directory. .gitkeep stays tracked.
+data/*.db
+memories/*.json
+rem-recombinator/data/*.db
+rem-recombinator/memories/*.json
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
