@@ -27,72 +27,95 @@
   font-display: swap;
 }
 
-:root {
-  color-scheme: light;
-}
-
+:root { color-scheme: light; }
 * { box-sizing: border-box; }
-
 html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
   background: #fff;
   color: #000;
-  font-family: "Latin Modern Roman", "Computer Modern", "CMU Serif", serif;
+  font-family: "Latin Modern Roman", "Computer Modern", serif;
   font-size: 12pt;
-  line-height: 1.38;
-  font-weight: 400;
+  line-height: 1.45;
 }
 
 .paper {
-  width: min(6.4in, calc(100% - 1.4rem));
-  margin: 0.85in auto 1.1in;
+  width: min(6.7in, calc(100% - 1.6rem));
+  margin: 0.72in auto 1.15in;
 }
 
-.titleblock { text-align: center; margin: 0 0 1.35em; }
+.running {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+  margin: 0 0 1.55em;
+  padding-bottom: 0.28em;
+  border-bottom: 0.7pt solid #000;
+  font-size: 10pt;
+  font-variant: normal;
+}
+
+.titleblock {
+  text-align: center;
+  margin: 0 0 1.15em;
+  padding-bottom: 0.15em;
+}
 .titleblock h1 {
   margin: 0;
-  font-size: 17pt;
+  font-size: 20pt;
   font-weight: 700;
-  line-height: 1.15;
+  letter-spacing: 0.01em;
+  line-height: 1.12;
 }
-.titleblock p {
-  text-indent: 0;
-  text-align: center;
-}
+.titleblock p { text-indent: 0; text-align: center; }
 .titleblock .subtitle {
-  margin: 0.55em 0 0;
-  font-size: 12pt;
+  margin: 0.55em 1em 0;
+  font-size: 12.5pt;
+  font-style: italic;
 }
 .titleblock .meta {
-  margin: 0.85em 0 0;
+  margin: 0.7em 0 0;
   font-size: 11pt;
 }
 
 .abstract {
-  margin: 0 0.55in 1.3em;
+  margin: 0 0.42in 0.35em;
   font-size: 10.5pt;
-  line-height: 1.35;
+  line-height: 1.42;
 }
 .abstract h2 {
-  margin: 0 0 0.45em;
+  margin: 0 0 0.4em;
   text-align: center;
   font-size: 10.5pt;
   font-weight: 700;
 }
 .abstract p { margin: 0; text-align: justify; hyphens: auto; }
+.keywords {
+  margin-top: 0.7em !important;
+  text-indent: 0 !important;
+}
+.keywords span { font-weight: 700; font-style: italic; }
+
+.contents {
+  margin: 0.85em 0 0.2em;
+  text-indent: 0;
+  font-size: 11pt;
+}
+.contents .label { font-weight: 700; margin-right: 0.35em; }
+.contents a { margin-right: 0.85em; }
 
 h2.section {
-  margin: 1.35em 0 0.55em;
-  font-size: 14pt;
+  margin: 1.55em 0 0.55em;
+  padding-top: 0.15em;
+  font-size: 14.5pt;
   font-weight: 700;
   line-height: 1.2;
 }
 h2.section .no { margin-right: 0.55em; }
 
 p {
-  margin: 0 0 0.15em;
+  margin: 0 0 0.2em;
   text-align: justify;
   hyphens: auto;
   text-indent: 1.5em;
@@ -101,42 +124,66 @@ h2.section + p,
 .abstract p,
 p.noindent,
 .remark p,
+.contents,
 figcaption,
+dd,
 li { text-indent: 0; }
 
 a { color: #000; }
-
 .math i { font-style: italic; }
 
 .equation {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: last baseline;
-  column-gap: 1em;
-  margin: 0.85em 0 0.95em;
-  font-size: 12pt;
+  column-gap: 1.1em;
+  margin: 0.7em 0 0.85em;
 }
-.equation .body { text-align: center; }
-.equation .line { display: block; white-space: nowrap; }
-.equation .eqno { text-align: right; }
-.equation .norm { font-style: normal; }
-.equation sub { font-style: italic; }
-.equation .term.on { border-bottom: 0.6pt solid #000; }
+.equation .body { min-width: 0; text-align: center; overflow-x: auto; }
+.equation .eqno { font-size: 12pt; }
+.equation .katex-display { margin: 0.15em 0; text-align: center; }
 
-.remark {
-  margin: 0.9em 0 0.9em 1.6em;
-}
-.remark .env {
+dl { margin: 0.15em 0 0.35em; }
+dt {
+  margin: 0.55em 0 0.08em;
   font-weight: 700;
   font-style: italic;
 }
+dd {
+  margin: 0;
+  text-align: justify;
+  hyphens: auto;
+}
+
+.algorithm { margin: 1em 0 1.15em; }
+.alghead {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+  padding: 0.22em 0 0.28em;
+  border-top: 1.05pt solid #000;
+  border-bottom: 0.45pt solid #000;
+  font-weight: 700;
+}
+.algorithm ol {
+  margin: 0.45em 0 0;
+  padding: 0 0 0.35em 1.35em;
+  border-bottom: 1.05pt solid #000;
+}
+.algorithm li {
+  margin: 0.22em 0;
+  text-align: justify;
+  hyphens: auto;
+}
+
+.remark { margin: 0.85em 0 0.85em 1.5em; }
+.remark .env { font-weight: 700; font-style: italic; }
 
 figure {
-  margin: 1em 0 0.4em;
+  margin: 1.05em 0 0.35em;
   padding: 0;
   border: 0;
   background: transparent;
-  box-shadow: none;
 }
 svg.plot, svg.bands {
   width: 100%;
@@ -145,36 +192,49 @@ svg.plot, svg.bands {
   background: #fff;
 }
 figcaption {
-  margin: 0.45em 0 0;
+  margin: 0.5em 0 0;
   font-size: 10.5pt;
+  line-height: 1.38;
   text-align: justify;
   hyphens: auto;
 }
 figcaption .label { font-weight: 700; }
 
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25em 1.15em;
+  margin: 0.4em 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 10.5pt;
+}
+.legend li { display: flex; align-items: center; gap: 0.35em; }
+.key { width: 0.95em; height: 0.95em; display: block; }
+
 .protocol {
-  margin: 0.7em 0 0;
-  min-height: 2.6em;
-  font-family: "Latin Modern Mono", ui-monospace, monospace;
-  font-size: 9.5pt;
-  line-height: 1.35;
-  white-space: pre-wrap;
+  margin: 0.75em 0 0;
+  min-height: 2.9em;
+  font-size: 11pt;
+  text-align: justify;
+  hyphens: auto;
+  text-indent: 0;
 }
 
-.bars { margin: 0.35em 0 0; }
+.bars { margin: 0.55em 0 0; }
 .bars div {
   display: grid;
-  grid-template-columns: 1.2em 1fr 3.2em;
-  gap: 0.45em;
+  grid-template-columns: 1.15em minmax(0, 1fr) 3.1em;
+  gap: 0.5em;
   align-items: center;
-  margin: 0.18em 0;
-  font-size: 10.5pt;
+  margin: 0.22em 0;
+  font-size: 11pt;
 }
 .track {
   display: block;
-  height: 0.42em;
-  border-bottom: 0.7pt solid #000;
   position: relative;
+  height: 0.55em;
+  border-bottom: 0.7pt solid #000;
 }
 .fill {
   position: absolute;
@@ -184,11 +244,15 @@ figcaption .label { font-weight: 700; }
   width: 0;
   background: #000;
 }
-
-.controls {
-  margin: 0.35em 0 0;
-  font-size: 10.5pt;
+.floor {
+  position: absolute;
+  left: 30%;
+  top: -0.18em;
+  bottom: -0.22em;
+  border-left: 0.65pt solid #000;
 }
+
+.controls { margin: 0.4em 0 0; font-size: 10.5pt; text-indent: 0; }
 button {
   font-family: "Latin Modern Roman", serif;
   font-size: 10.5pt;
@@ -196,9 +260,10 @@ button {
   background: #fff;
   border: 0.7pt solid #000;
   border-radius: 0;
-  padding: 0.02em 0.45em 0.08em;
+  padding: 0.04em 0.5em 0.1em;
   cursor: pointer;
 }
+button + button { margin-left: 0.35em; }
 button:focus-visible, a:focus-visible, input:focus-visible {
   outline: 0.8pt solid #000;
   outline-offset: 2px;
@@ -207,13 +272,14 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 table {
   width: 100%;
   border-collapse: collapse;
-  margin: 0.4em 0 0.2em;
+  margin: 1.1em 0 0.2em;
   font-size: 10.5pt;
+  line-height: 1.35;
 }
 caption {
   caption-side: top;
   text-align: left;
-  padding: 0 0 0.35em;
+  padding: 0 0 0.4em;
   font-size: 10.5pt;
 }
 caption .label { font-weight: 700; }
@@ -223,52 +289,65 @@ th, td {
   text-align: left;
   vertical-align: top;
   font-weight: 400;
-  padding: 0.22em 0.7em 0.22em 0;
+  padding: 0.28em 0.75em 0.28em 0;
   border: 0;
 }
 th { font-style: italic; }
-
-ol.steps { margin: 0.4em 0 0.6em; padding-left: 1.4em; }
-ol.steps li { margin: 0.2em 0; text-align: justify; hyphens: auto; }
+td:first-child, th:first-child { width: 2em; }
+td:nth-child(2), th:nth-child(2) { width: 7.2em; }
 
 .verbatim {
-  margin: 0.7em 0;
-  padding: 0.35em 0 0.35em 0.2em;
+  margin: 0.75em 0 0.35em;
+  padding: 0.42em 0;
+  border-top: 0.45pt solid #000;
+  border-bottom: 0.45pt solid #000;
   font-family: "Latin Modern Mono", ui-monospace, monospace;
   font-size: 10.5pt;
-  line-height: 1.4;
+  line-height: 1.45;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
 .critic label {
   display: grid;
-  grid-template-columns: 8.2em 1fr 3em;
-  gap: 0.5em;
+  grid-template-columns: 8.4em minmax(0, 1fr) 3em;
+  gap: 0.55em;
   align-items: center;
-  margin: 0.28em 0;
+  margin: 0.32em 0;
   font-size: 11pt;
 }
 input[type="range"] { width: 100%; accent-color: #000; }
 
 .decision {
-  margin: 0.7em 0 0;
+  margin: 0.75em 0 0;
   text-indent: 0;
   font-style: italic;
 }
 
 footer {
-  margin-top: 2em;
-  padding-top: 0.6em;
+  margin-top: 2.1em;
+  padding-top: 0.55em;
   border-top: 0.6pt solid #000;
   font-size: 9.5pt;
+  line-height: 1.4;
 }
-footer p { text-indent: 0; margin: 0.2em 0; }
+footer p { text-indent: 0; margin: 0.15em 0; }
 
 @media (max-width: 640px) {
-  .paper { margin: 1.1rem auto 2rem; }
+  body { font-size: 12pt; }
+  .paper { margin: 1rem auto 2rem; width: min(100% - 1.25rem, 6.7in); }
   .abstract { margin-left: 0; margin-right: 0; }
-  .equation { font-size: 11pt; }
-  .equation .line { white-space: normal; }
-  .critic label { grid-template-columns: 1fr; }
+  .running { font-size: 9pt; }
+  .titleblock h1 { font-size: 18pt; }
+  .contents a { display: inline-block; margin: 0.12em 0.7em 0.12em 0; }
+  .critic label { grid-template-columns: 1fr auto; }
+  .critic label input { grid-column: 1 / -1; }
+  .equation { font-size: 10pt; }
+  .equation .katex { font-size: 1em; }
+}
+
+@media print {
+  .controls, .running { display: none; }
+  .paper { margin: 0; width: auto; }
+  a { text-decoration: none; }
 }

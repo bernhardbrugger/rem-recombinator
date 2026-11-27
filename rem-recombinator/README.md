@@ -1,6 +1,8 @@
 # REM Recombinator
 
-REM Recombinator is a small research framework for **semantic recombination** of a personal knowledge store. The name points at a computational sketch of REM sleep, not at a claim that the program sleeps or consolidates memory the way a brain does: during REM, weakly linked traces are reactivated together, and most of those collisions are noise. The system does the analogous thing on purpose. It selects fragment pairs by an explicit rule, asks a model for one hypothesis, throws the hypothesis away when its embedding is too close to the corpus or has no anchor in it, and scores what remains on four axes. Every choice is written to SQLite with the hyperparameters that produced it.
+Manual for the package. The public note, with the animated geometry of the fictional sample, is at <https://bernhardbrugger.github.io/rem-recombinator/>.
+
+The procedure selects pairs from a private store by an explicit geometric rule, asks a model for one hypothesis, and discards that hypothesis unless it clears a novelty window and a four-axis critic. The name is a computational sketch of REM sleep, not a claim about brains: during REM, weakly linked traces are reactivated together, and most of those collisions are noise. Every choice is written to SQLite with the hyperparameters that produced it. Personal exports are not in this repository.
 
 Run the commands below from this directory (`rem-recombinator/`).
 
@@ -225,7 +227,7 @@ rem-recombinator demo
 
 `fragments.json` is `{"fragments": [{"text": "...", "domain": "physics"}]}`. A directory of `.md` or `.txt` files uses the folder name as the domain. `demo` runs the fictional sample in a temporary database and does not open your store.
 
-The page is [`docs/`](../docs/index.html). The workflow [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) publishes it and turns GitHub Pages on if the site does not exist yet. The address is `https://bernhardbrugger.github.io/rem-recombinator/`. If GitHub refuses that token, set Settings → Pages → Source to GitHub Actions and rerun the workflow.
+The note is [`docs/`](../docs/index.html), served by GitHub Pages from the `docs/` folder on `main`: <https://bernhardbrugger.github.io/rem-recombinator/>.
 
 ## Nightly run
 
