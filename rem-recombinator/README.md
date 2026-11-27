@@ -193,6 +193,7 @@ python -m rem_recombinator export --format markdown --output run.md
 python -m rem_recombinator lineage 1
 python -m rem_recombinator diagnose --seed 0
 python -m rem_recombinator evaluate examples/evaluation_labels.example.json
+python -m rem_recombinator demo
 ```
 
 `python cli.py …` is the same entry point. A live run is:
@@ -203,6 +204,28 @@ python -m rem_recombinator run --strategy semantic_bridge --n 5 --seed 0
 ```
 
 `--llm template` is the offline stand-in. On the sample export it keeps two candidates and accepts none, because every template axis is 0.5 and the composite 0.50 is below 0.60. That is the gate working, not a successful scientific recombination. `--verbose` prints the pair-selection log on stderr. Put it before the subcommand: `python -m rem_recombinator --verbose run …`.
+
+## Public demonstration
+
+The GitHub Pages site is the public face of the method. It draws the fictional sample only: seven sentences, the offline 32-dimensional hash, and the selection bands. Personal exports are not in the repository, not in the nightly artifact, and not on that page.
+
+One command installs a private store and registers a local MCP server. The server speaks stdio, so the chat client can be Cursor, Claude Desktop, or any other host that launches an MCP process. The command does not read chats and does not upload the database.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bernhardbrugger/rem-recombinator/main/install.sh | bash
+```
+
+The registered process uses the hashing embedder and the template model. Fragment text stays on the machine until you edit `REM_EMBEDDER` or `REM_LLM` in the client config and supply API keys. Import is local and model-neutral:
+
+```bash
+rem-recombinator import ./fragments.json --embedder hashing
+rem-recombinator import ./notes/ --embedder hashing
+rem-recombinator demo
+```
+
+`fragments.json` is `{"fragments": [{"text": "...", "domain": "physics"}]}`. A directory of `.md` or `.txt` files uses the folder name as the domain. `demo` runs the fictional sample in a temporary database and does not open your store.
+
+The page is [`docs/`](../docs/index.html). After merge, GitHub serves it once Pages is set to **GitHub Actions** (Settings, Pages, Source). The workflow is [`.github/workflows/pages.yml`](../.github/workflows/pages.yml). The address is `https://bernhardbrugger.github.io/rem-recombinator/`.
 
 ## Nightly run
 

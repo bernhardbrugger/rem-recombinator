@@ -11,7 +11,13 @@ import sys
 from dataclasses import replace
 from typing import Any
 
-from rem_recombinator.config import STRATEGY_CHOICES, ExperimentConfig, load_config
+from rem_recombinator.config import (
+    STRATEGY_CHOICES,
+    ExperimentConfig,
+    embedder_name,
+    llm_name,
+    load_config,
+)
 from rem_recombinator.embeddings import Embedder, build_embedder
 from rem_recombinator.llm import LanguageModel, build_language_model
 from rem_recombinator.recombinator import execute_run
@@ -230,6 +236,11 @@ def serve() -> None:
     app = Server("rem-recombinator")
     config = load_config()
     store = Store(config.db_path)
+    # Resolved once, from the environment the chat client passed in.
+    # The install command sets hashing + template, so a client can call the
+    # tools without an API key and without sending fragment text off the machine.
+    embedder = build_embedder(embedder_name(), config)
+    llm = build_language_model(llm_name(), config)
 
     @app.list_tools()
     async def list_tools() -> list[Tool]:
@@ -241,7 +252,14 @@ def serve() -> None:
     @app.call_tool()
     async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         logger.info("tool %s", name)
-        text = dispatch(name, arguments, store=store, config=config)
+        text = dispatch(
+            name,
+            arguments,
+            store=store,
+            config=config,
+            embedder=embedder,
+            llm=llm,
+        )
         return [TextContent(type="text", text=text)]
 
     async def runner() -> None:

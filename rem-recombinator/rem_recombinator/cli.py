@@ -10,6 +10,7 @@ import logging
 import sys
 from pathlib import Path
 
+from rem_recombinator.client_setup import register_clients, registration_message
 from rem_recombinator.config import STRATEGY_CHOICES, ExperimentConfig, load_config
 from rem_recombinator.diagnostics import similarity_sample, summarize
 from rem_recombinator.embeddings import build_embedder
@@ -30,7 +31,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--verbose", action="store_true", help="Log selection details to stderr")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    import_parser = sub.add_parser("import", help="Import a Claude memories export")
+    import_parser = sub.add_parser(
+        "import",
+        help="Import a Claude export, a fragments JSON file, a text file, or a directory of notes",
+    )
     import_parser.add_argument("export", type=Path)
     import_parser.add_argument("--dry-run", action="store_true")
     import_parser.add_argument("--embedder", choices=("voyage", "hashing"), default="voyage")
@@ -63,6 +67,24 @@ def main(argv: list[str] | None = None) -> int:
     )
     evaluate_parser.add_argument("labels", type=Path)
 
+    sub.add_parser(
+        "demo",
+        help="Run the fictional public sample in a temporary database. Does not read a personal export.",
+    )
+
+    register_parser = sub.add_parser(
+        "register",
+        help="Write the local MCP server into chat-client config files. Does not read a store.",
+    )
+    register_parser.add_argument("--prefix", type=Path, required=True)
+    register_parser.add_argument("--home", type=Path, default=None)
+    register_parser.add_argument("--python", type=Path, default=None)
+    register_parser.add_argument(
+        "--no-register",
+        action="store_true",
+        help="Write only the snippet under the prefix. Do not touch client configs.",
+    )
+
     args = parser.parse_args(argv)
     logging.basicConfig(
         stream=sys.stderr,
@@ -88,6 +110,15 @@ def main(argv: list[str] | None = None) -> int:
             return _diagnose(args, config)
         if args.command == "evaluate":
             return _evaluate(args, config)
+        if args.command == "demo":
+            if args.db is None:
+                import tempfile
+
+                with tempfile.TemporaryDirectory(prefix="rem-demo-") as tmp:
+                    return _demo(_with_db(config, Path(tmp) / "demo.db"))
+            return _demo(config)
+        if args.command == "register":
+            return _register(args)
     except (FileNotFoundError, KeyError, ValueError, RuntimeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
@@ -117,6 +148,56 @@ def _import(args: argparse.Namespace, config: ExperimentConfig) -> int:
         return 0
     print(f"Added {report.added}. Skipped {report.skipped_existing} already stored.")
     print(f"Database: {config.db_path}")
+    return 0
+
+
+def _register(args: argparse.Namespace) -> int:
+    home = args.home or Path.home()
+    written, warnings = register_clients(
+        args.prefix,
+        home,
+        python=args.python,
+        clients=not args.no_register,
+    )
+    print(registration_message(args.prefix, written, warnings))
+    return 0
+
+
+def _demo(config: ExperimentConfig) -> int:
+    """One offline cycle on the committed fictional sample.
+
+    The database is the path already stored on ``config``. The ``demo`` command
+    points that path at a temporary directory unless the caller passed ``--db``.
+    Hashing and the template model are fixed so this command never calls an API.
+    """
+    sample = Path(__file__).resolve().parent.parent / "examples" / "sample_memory_export.json"
+    print("Fictional public corpus. This command does not read a personal export.")
+    embedder = build_embedder("hashing", config)
+    llm = build_language_model("template", config)
+    from dataclasses import replace
+
+    active = replace(config, strategy="all", candidates_per_run=3, seed=0)
+    with Store(config.db_path) as store:
+        report = import_run(sample, store, embedder)
+        print(f"Extracted {report.extracted} fragments. Added {report.added}.")
+        result = execute_run(
+            store=store,
+            config=active,
+            embedder=embedder,
+            llm=llm,
+            materialize_accepted=False,
+        )
+    print(
+        f"Run {result.run_id}: {len(result.candidates)} candidates, {len(result.accepted)} accepted."
+    )
+    for candidate in result.candidates:
+        score = "n/a" if candidate.critique is None else f"{candidate.critique.composite_score:.3f}"
+        print(
+            f"- #{candidate.id} {candidate.strategy} {candidate.filter_status} "
+            f"parents={list(candidate.parent_ids)} score={score}"
+        )
+    print("The template critic scores every axis at 0.50. The accept threshold is 0.60.")
+    print("Nothing is accepted. That is the gate, not a finding from this sample.")
     return 0
 
 
