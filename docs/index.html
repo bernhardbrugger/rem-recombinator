@@ -4,63 +4,99 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>REM Recombinator</title>
-  <meta name="description" content="A note on a rejection-heavy recombination procedure. The public page uses seven fictional sentences. Personal chats stay on the machine.">
+  <meta name="description" content="A rejection-heavy procedure for a private knowledge store. Pairs are chosen by an explicit geometric rule, and almost every hypothesis is discarded. The public note uses seven fictional sentences.">
   <link rel="stylesheet" href="site.css">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='white' width='32' height='32'/%3E%3Ctext x='4' y='23' font-family='serif' font-size='18'%3ER%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="vendor/katex/katex.min.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='white' width='32' height='32'/%3E%3Cpath d='M6 26 V6 H10 V22 H22 V26 Z' fill='black'/%3E%3C/svg%3E">
 </head>
 <body>
   <article class="paper">
+    <header class="running">
+      <span>REM Recombinator</span>
+      <span>a computational note</span>
+    </header>
+
     <header class="titleblock">
       <h1>REM Recombinator</h1>
-      <p class="subtitle">A note on a rejection-heavy recombination procedure</p>
-      <p class="meta">Public demonstration. The corpus is fictional.</p>
+      <p class="subtitle">Pairs chosen by geometry, and a critic that keeps almost nothing</p>
+      <p class="meta">Public note. The corpus is seven fictional sentences.</p>
     </header>
 
     <section class="abstract" id="abstract">
       <h2>Abstract</h2>
-      <p>The procedure selects pairs of stored fragments by an explicit geometric rule, asks for one hypothesis, and discards that hypothesis unless it clears a novelty window and a four-axis critic. The name is a computational sketch of REM sleep, not a claim about brains. This note draws the offline signed feature hash of seven invented sentences. It is a reproducibility stand-in. It is not a semantic embedding, and it is not evidence about meaning. Personal records are not in the repository, the nightly artifact, or this page.</p>
+      <p>Stored fragments are paired by a rule you can recompute. A model may propose one hypothesis from a pair. The hypothesis is discarded when its nearest neighbour falls outside a fixed window, and what remains is kept only if a four-axis score clears two thresholds that the model does not set. The name is a sketch of REM sleep, in which weakly linked traces are reactivated together and most collisions are noise. It is not a claim about brains. The figure on this page is the offline signed feature hash of an invented corpus, projected onto two principal components. It is a reproducibility stand-in, not a semantic embedding. Personal records are not in the repository, the nightly artifact, or this note.</p>
+      <p class="keywords"><span>Keywords.</span> recombination, cosine geometry, novelty, private store.</p>
     </section>
+
+    <p class="contents"><span class="label">Contents.</span>
+      <a href="#selection">1 Selection</a>
+      <a href="#cycle">2 The published hash</a>
+      <a href="#decision">3 The accept rule</a>
+      <a href="#install">4 A private store</a>
+    </p>
 
     <section id="selection">
       <h2 class="section"><span class="no">1</span>Selection</h2>
-      <p class="noindent">Cosine similarity, with a zero vector defined as similarity&nbsp;0, is</p>
+      <p class="noindent">Cosine similarity, with a zero vector defined as similarity 0, is</p>
       <div class="equation">
-        <span class="body math">cos(<i>u</i>, <i>v</i>) = (<i>u</i> · <i>v</i>) / (<span class="norm">|</span><i>u</i><span class="norm">|</span> <span class="norm">|</span><i>v</i><span class="norm">|</span>).</span>
-        <span class="eqno">(1)</span>
+        <div class="body" id="tex-1"></div>
+        <div class="eqno">(1)</div>
       </div>
-      <p>Semantic bridge keeps a pair only when the fragments sit in different greedy-leader clusters (link 0.55) and the cosine lies in [0.05, 0.35]. The score is the novelty of the normalised midpoint against every other fragment,</p>
+      <p>Three rules then keep a pair. Each one is a predicate on the stored vectors and the domain tags, followed by a score. None of them asks a model which pair is interesting.</p>
+      <dl>
+        <dt>Semantic bridge.</dt>
+        <dd>Greedy leader clustering at link 0.55. The pair must sit in different clusters, and the cosine must lie in [0.05, 0.35]. The score is the novelty of the normalised midpoint against every other fragment.</dd>
+        <dt>Analogical transfer.</dt>
+        <dd>The domains must differ, and neither may be unspecified. Inside [0.15, 0.55] the score is the cosine itself: a shared direction across tags.</dd>
+        <dt>Dialectic synthesis.</dt>
+        <dd>A documented list of lexical oppositions, matched on word boundaries, and a cosine in [0.20, 0.75]. The score is tension times closeness to 0.45. The list is a cue, not an entailment check.</dd>
+      </dl>
       <div class="equation">
-        <span class="body math"><span class="line"><i>m</i> = normalize(normalize(<i>u</i>) + normalize(<i>v</i>)),</span><span class="line"><i>S</i> = 1 - max cos(<i>m</i>, <i>v</i><sub>k</sub>).</span></span>
-        <span class="eqno">(2)</span>
+        <div class="body" id="tex-2"></div>
+        <div class="eqno">(2)</div>
       </div>
-      <p>Analogical transfer keeps pairs from different domains whose cosine lies in [0.15, 0.55]. Inside that band the score is the cosine. Dialectic synthesis requires a listed lexical opposition and a cosine in [0.20, 0.75]; the score is tension times closeness to 0.45. The opposition list is a cue list, not an entailment check.</p>
+      <div class="algorithm">
+        <div class="alghead"><span>Algorithm 1</span> One cycle</div>
+        <ol>
+          <li>Enumerate pairs in id order and keep those the chosen rule accepts. Above a size cap, sample with a seed.</li>
+          <li>Ask for one hypothesis from the highest-scoring pair. The model does not choose the pair.</li>
+          <li>Drop the hypothesis when its nearest neighbour is above 0.88 or below 0.05.</li>
+          <li>Score four axes in [0, 1]. Accept only when (3) and (4) both hold. Write the parents, the hyperparameters, and the verdict.</li>
+        </ol>
+      </div>
     </section>
 
     <section id="cycle">
-      <h2 class="section"><span class="no">2</span>A cycle on the published hash</h2>
-      <p class="noindent">Figure&nbsp;1 plays one pass over the committed geometry. Marks enter, the winning pair of each rule is drawn, a bead travels the segment, and the critic then rejects the template scores. The numbers are the ones in <span class="math">geometry.json</span>.</p>
+      <h2 class="section"><span class="no">2</span>The published hash</h2>
+      <p class="noindent">Figure 1 plays one pass over the committed geometry. The frame is drawn, the seven fragments enter, each rule shows the pair it keeps, and the template critic then rejects its own scores. Every number is taken from <span class="math">geometry.json</span>. The bead travels the chord in this plane. That chord is a picture of the pair. It is not the projection of the embedding midpoint.</p>
       <figure>
-        <svg id="plot" class="plot" viewBox="0 0 640 390" role="img" aria-label="Animated principal-component plane of the fictional corpus">
-          <g id="grid"></g>
+        <svg id="plot" class="plot" viewBox="0 0 660 452" role="img" aria-label="Animated principal-component plane of the fictional corpus">
+          <g id="frame"></g>
           <g id="links"></g>
           <g id="marks"></g>
-          <circle id="bead" r="4.2" fill="#fff" stroke="#000" stroke-width="1.1" opacity="0"></circle>
-          <text id="readout" x="18" y="22" font-family="Latin Modern Mono, ui-monospace, monospace" font-size="13" fill="#000"></text>
-          <text id="legend" x="18" y="374" font-family="Latin Modern Roman, serif" font-size="12" fill="#000"></text>
+          <circle id="bead" r="4.4" fill="#fff" stroke="#000" stroke-width="1.15" opacity="0"></circle>
+          <text id="stage" x="98" y="50" font-family="Latin Modern Roman, serif" font-style="italic" font-size="15" fill="#000"></text>
+          <text id="readout" x="98" y="360" font-family="Latin Modern Mono, ui-monospace, monospace" font-size="13" fill="#000"></text>
         </svg>
-        <div class="bars" id="bars" aria-hidden="true">
-          <div><span><i>N</i></span><span class="track"><span class="fill" id="fill-n"></span></span><span id="num-n">0.00</span></div>
-          <div><span><i>L</i></span><span class="track"><span class="fill" id="fill-l"></span></span><span id="num-l">0.00</span></div>
-          <div><span><i>F</i></span><span class="track"><span class="fill" id="fill-f"></span></span><span id="num-f">0.00</span></div>
-          <div><span><i>U</i></span><span class="track"><span class="fill" id="fill-u"></span></span><span id="num-u">0.00</span></div>
+        <ul class="legend">
+          <li><svg class="key" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.4" fill="#000"></circle></svg> physics</li>
+          <li><svg class="key" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.4" y="3.4" width="9.2" height="9.2" fill="#000"></rect></svg> biology</li>
+          <li><svg class="key" viewBox="0 0 16 16" aria-hidden="true"><polygon points="8,2.2 14.2,13.6 1.8,13.6" fill="#000"></polygon></svg> project</li>
+          <li><svg class="key" viewBox="0 0 16 16" aria-hidden="true"><polygon points="8,1.8 14.2,8 8,14.2 1.8,8" fill="#000"></polygon></svg> conversation</li>
+        </ul>
+        <div class="bars" id="bars">
+          <div><span><i>N</i></span><span class="track"><span class="floor"></span><span class="fill" id="fill-n"></span></span><span id="num-n">0.00</span></div>
+          <div><span><i>L</i></span><span class="track"><span class="floor"></span><span class="fill" id="fill-l"></span></span><span id="num-l">0.00</span></div>
+          <div><span><i>F</i></span><span class="track"><span class="floor"></span><span class="fill" id="fill-f"></span></span><span id="num-f">0.00</span></div>
+          <div><span><i>U</i></span><span class="track"><span class="floor"></span><span class="fill" id="fill-u"></span></span><span id="num-u">0.00</span></div>
         </div>
-        <pre class="protocol" id="protocol"></pre>
+        <p class="protocol" id="protocol" aria-live="polite"></p>
         <p class="controls"><button type="button" id="pause">Pause</button></p>
-        <figcaption id="plot-caption"><span class="label">Figure 1:</span> First two principal components of the 32-dimensional signed feature hash. The plane is a picture of that hash. A bead travels the selected segment while the line is drawn.</figcaption>
+        <figcaption><span class="label">Figure 1:</span> First two principal components of the 32-dimensional signed feature hash. The percentages on the axes are the share of variance in that hash. A filled mark is one fragment. The heavy segment is the pair the rule currently keeps. The tick on each critic rule, at 0.30, is the axis floor in (4).</figcaption>
       </figure>
       <figure>
-        <svg id="bands" class="bands" viewBox="0 0 640 150" role="img" aria-label="Pair cosines moving onto the axis of the selected window"></svg>
-        <figcaption><span class="label">Figure 2:</span> Every pair, placed by its cosine. The shaded interval is the window of the rule currently playing in Figure&nbsp;1. Large marks are the pair that rule keeps. Negative cosines fall outside every window. This axis is pair selection, not the novelty gate.</figcaption>
+        <svg id="bands" class="bands" viewBox="0 0 660 156" role="img" aria-label="Pair cosines against the window of the rule now playing"></svg>
+        <figcaption><span class="label">Figure 2:</span> Every pair in the fictional corpus, placed by cosine. The shaded interval is the window of the rule playing in Figure 1, and the cursor stops on the pair that rule keeps. Large marks are that pair. Negative cosines fall outside every window. This axis selects pairs. It is not the novelty gate.</figcaption>
       </figure>
       <table>
         <caption><span class="label">Table 1:</span> The entire public corpus. Identifiers match the figures.</caption>
@@ -81,18 +117,18 @@
 
     <section id="decision">
       <h2 class="section"><span class="no">3</span>The accept rule</h2>
-      <p class="noindent">The model fills four scores in [0, 1]. The composite and the accept bit are computed here, not taken from the model:</p>
+      <p class="noindent">The model fills four scores in [0, 1]. The composite and the accept bit are computed here:</p>
       <div class="equation" id="eq-c">
-        <span class="body math"><span class="line"><i>C</i> = <span class="term" data-term="n">0.30<i>N</i></span> + <span class="term" data-term="l">0.30<i>L</i></span></span><span class="line">+ <span class="term" data-term="f">0.20<i>F</i></span> + <span class="term" data-term="u">0.20<i>U</i></span>.</span></span>
-        <span class="eqno">(3)</span>
+        <div class="body" id="tex-3"></div>
+        <div class="eqno">(3)</div>
       </div>
       <div class="equation">
-        <span class="body math"><span class="line">accept if <i>C</i> &gt;= 0.60</span><span class="line">and min(<i>N</i>, <i>L</i>, <i>F</i>, <i>U</i>) &gt;= 0.30.</span></span>
-        <span class="eqno">(4)</span>
+        <div class="body" id="tex-4"></div>
+        <div class="eqno">(4)</div>
       </div>
-      <p>A hypothesis is dropped before the critic when its nearest neighbour is above 0.88 or below 0.05. The template model used by the public cycle scores every axis at 0.50, so <i>C</i> = 0.500 and the report is rejected. Moving the rules below recomputes (3) and (4) and holds the animation.</p>
+      <p>On the published cycle the template model scores every axis at 0.50, so <i>C</i> = 0.500 and the report is rejected. That is the gate working. Moving a rule below recomputes (3) and (4) and holds the animation.</p>
       <form id="critic" class="critic">
-        <label>Novelty <input id="novelty" type="range" min="0" max="1" step="0.01" value="0.50"> <output data-out="novelty">0.50</output></label>
+        <label>Novelty <input id="novelty" type="range" min="0" max="1" step="0.01" value="0.50" aria-valuemin="0" aria-valuemax="1"> <output data-out="novelty">0.50</output></label>
         <label>Coherence <input id="coherence" type="range" min="0" max="1" step="0.01" value="0.50"> <output data-out="logical_coherence">0.50</output></label>
         <label>Falsifiability <input id="falsifiability" type="range" min="0" max="1" step="0.01" value="0.50"> <output data-out="falsifiability">0.50</output></label>
         <label>Utility <input id="utility" type="range" min="0" max="1" step="0.01" value="0.50"> <output data-out="cross_domain_utility">0.50</output></label>
@@ -107,23 +143,24 @@
 
     <section id="install">
       <h2 class="section"><span class="no">4</span>A private store</h2>
-      <p class="noindent">One command installs the program under the home directory and registers a local stdio server. Any chat client that can launch that process can call it. The command does not read a transcript and does not upload a database. No API key is required. The registered embedder is the offline hash and the registered model is the template.</p>
+      <p class="noindent">One command installs the program under the home directory and registers a local stdio server. Any chat client that can launch that process can call it. The command does not read a transcript and does not upload a database. No API key is required. The registered embedder is the offline hash, and the registered model is the template.</p>
       <pre class="verbatim" id="command">curl -fsSL https://raw.githubusercontent.com/bernhardbrugger/rem-recombinator/main/install.sh | bash</pre>
       <p class="controls"><button type="button" id="copy">Copy the command</button></p>
       <div class="remark">
-        <p><span class="env">Remark.</span> Fragment text leaves the machine only if <span class="math">REM_EMBEDDER</span> or <span class="math">REM_LLM</span> is later pointed at an API and keys are added in the local environment. Those keys are not part of this page.</p>
+        <p><span class="env">Remark.</span> Fragment text leaves the machine only if <span class="math">REM_EMBEDDER</span> or <span class="math">REM_LLM</span> is later pointed at an API and keys are added in the local environment. Those keys are not part of this note.</p>
       </div>
-      <p class="noindent">A corpus already on the machine is imported locally. A directory of notes uses the folder name as the domain. The command <span class="math">demo</span> reruns this fictional sample in a temporary database.</p>
+      <p class="noindent">A corpus already on the machine is imported locally. A directory of notes uses the folder name as the domain. The command <span class="math">demo</span> reruns this fictional sample in a temporary database and does not open your store.</p>
       <pre class="verbatim">rem-recombinator import ./fragments.json --embedder hashing
 rem-recombinator import ./notes/ --embedder hashing
 rem-recombinator demo</pre>
-      <p class="noindent"><span class="math">fragments.json</span> has the shape <span class="math">{"fragments": [{"text": "...", "domain": "physics"}]}</span>. The source of the procedure is <a href="https://github.com/bernhardbrugger/rem-recombinator">github.com/bernhardbrugger/rem-recombinator</a>.</p>
+      <p class="noindent"><span class="math">fragments.json</span> has the shape <span class="math">{"fragments": [{"text": "...", "domain": "physics"}]}</span>. The source and the manual are at <a href="https://github.com/bernhardbrugger/rem-recombinator">github.com/bernhardbrugger/rem-recombinator</a>.</p>
     </section>
 
     <footer>
-      <p>Thresholds are the repository defaults. The plane is produced by <span class="math">scripts/build_demo_geometry.py</span> and checked against that function. Latin Modern is used under the GUST Font License; the text is in <span class="math">fonts/GUST-FONT-LICENSE.txt</span>.</p>
+      <p>Thresholds are the repository defaults. The plane is produced by <span class="math">scripts/build_demo_geometry.py</span> and checked against that function. Displayed mathematics is set with KaTeX, under the MIT license in <span class="math">vendor/katex/LICENSE</span>. Latin Modern is used under the GUST Font License, in <span class="math">fonts/GUST-FONT-LICENSE.txt</span>.</p>
     </footer>
   </article>
+  <script src="vendor/katex/katex.min.js"></script>
   <script src="site.js"></script>
 </body>
 </html>
