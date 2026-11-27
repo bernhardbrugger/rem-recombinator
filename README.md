@@ -25,3 +25,5 @@ python -m rem_recombinator import examples/sample_memory_export.json --embedder 
 ```
 
 `.env`, `*.db`, and `memories/*.json` are gitignored. API keys stay local.
+
+A GitHub Action runs the offline example cycle every night at 02:15 UTC (03:15 Europe/Berlin in winter) and uploads `nightly-out/` as an artifact. See [Nightly run](rem-recombinator/README.md#nightly-run).

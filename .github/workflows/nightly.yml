@@ -1,0 +1,85 @@
+# Fresh example cycle each night. The runner disk is empty, so this does not
+# accumulate a personal store. The sample export is fictional.
+# 02:15 UTC is 03:15 Europe/Berlin in winter (CET) and 04:15 in summer (CEST).
+# GitHub may start a scheduled run later than the cron time, and it disables
+# the schedule after 60 days without a repository write.
+name: Nightly cycle
+
+on:
+  schedule:
+    - cron: "15 2 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: example is offline. live calls Anthropic and Voyage.
+        type: choice
+        required: true
+        default: example
+        options:
+          - example
+          - live
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-cycle
+  cancel-in-progress: false
+
+jobs:
+  cycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: rem-recombinator
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: rem-recombinator/requirements.txt
+
+      - name: Install
+        run: python -m pip install -r requirements.txt
+
+      - name: Example cycle
+        if: github.event_name != 'workflow_dispatch' || inputs.mode == 'example'
+        env:
+          PYTHON: python
+          REM_SEED: "0"
+          REM_EMBEDDER: hashing
+          REM_LLM: template
+          REM_STRATEGY: all
+          NIGHTLY_CANDIDATES: "3"
+          NIGHTLY_OUT: nightly-out
+        run: bash scripts/nightly_example.sh
+
+      - name: Live cycle
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'live'
+        env:
+          PYTHON: python
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
+          REM_SEED: "0"
+          REM_EMBEDDER: voyage
+          REM_LLM: anthropic
+          REM_STRATEGY: semantic_bridge
+          NIGHTLY_CANDIDATES: "3"
+          NIGHTLY_OUT: nightly-out
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ] || [ -z "$VOYAGE_API_KEY" ]; then
+            echo "Live mode needs repository secrets ANTHROPIC_API_KEY and VOYAGE_API_KEY."
+            exit 1
+          fi
+          bash scripts/nightly_example.sh
+
+      - name: Upload the night's report
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-cycle
+          path: rem-recombinator/nightly-out/
+          if-no-files-found: error
+          retention-days: 14
