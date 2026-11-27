@@ -1,0 +1,250 @@
+{
+  "corpus": "fictional-sample",
+  "embedder": "hashing-32",
+  "disclaimer": "Signed feature hash of seven fictional sentences, projected onto its first two principal components. Not a semantic embedding.",
+  "explained_variance": [
+    0.3013,
+    0.2705
+  ],
+  "thresholds": {
+    "bridge": [
+      0.05,
+      0.35
+    ],
+    "analogy": [
+      0.15,
+      0.55
+    ],
+    "dialectic": [
+      0.2,
+      0.75
+    ],
+    "dialectic_target": 0.45,
+    "cluster_link": 0.55,
+    "novelty_ceiling": 0.88,
+    "incoherence_floor": 0.05,
+    "accept": 0.6,
+    "axis_floor": 0.3,
+    "weights": {
+      "novelty": 0.3,
+      "logical_coherence": 0.3,
+      "falsifiability": 0.2,
+      "cross_domain_utility": 0.2
+    }
+  },
+  "fragments": [
+    {
+      "id": 1,
+      "domain": "physics",
+      "source": "memory_file",
+      "text": "Heat always increases entropy in an isolated system.",
+      "cluster": 1,
+      "x": -1.0,
+      "y": -0.1772
+    },
+    {
+      "id": 2,
+      "domain": "physics",
+      "source": "memory_file",
+      "text": "A feedback controller can decrease variance around a set point.",
+      "cluster": 2,
+      "x": 0.8199,
+      "y": -0.6917
+    },
+    {
+      "id": 3,
+      "domain": "biology",
+      "source": "memory_file",
+      "text": "Selection pressure can shrink diversity inside a local niche.",
+      "cluster": 3,
+      "x": 0.7524,
+      "y": -0.2592
+    },
+    {
+      "id": 4,
+      "domain": "project",
+      "source": "project_memory",
+      "text": "Closed systems always increase entropy when heat flows in and no work leaves.",
+      "cluster": 4,
+      "x": -0.7289,
+      "y": -0.631
+    },
+    {
+      "id": 5,
+      "domain": "project",
+      "source": "project_memory",
+      "text": "Open systems can export entropy and so decrease it locally.",
+      "cluster": 5,
+      "x": -0.0987,
+      "y": 0.0879
+    },
+    {
+      "id": 6,
+      "domain": "conversation",
+      "source": "conversations_memory",
+      "text": "Researchers keep a lab notebook so that a later reader can replay the conditions of an experiment.",
+      "cluster": 6,
+      "x": 0.3703,
+      "y": 0.6711
+    },
+    {
+      "id": 7,
+      "domain": "conversation",
+      "source": "conversations_memory",
+      "text": "A claim without an observation that could refute it is not yet a hypothesis.",
+      "cluster": 7,
+      "x": -0.1149,
+      "y": 1.0
+    }
+  ],
+  "pairs": [
+    {
+      "a": 1,
+      "b": 2,
+      "cosine": -0.3062
+    },
+    {
+      "a": 1,
+      "b": 3,
+      "cosine": -0.1336
+    },
+    {
+      "a": 1,
+      "b": 4,
+      "cosine": 0.4903
+    },
+    {
+      "a": 1,
+      "b": 5,
+      "cosine": 0.0
+    },
+    {
+      "a": 1,
+      "b": 6,
+      "cosine": -0.0913
+    },
+    {
+      "a": 1,
+      "b": 7,
+      "cosine": 0.0
+    },
+    {
+      "a": 2,
+      "b": 3,
+      "cosine": 0.4364
+    },
+    {
+      "a": 2,
+      "b": 4,
+      "cosine": 0.0
+    },
+    {
+      "a": 2,
+      "b": 5,
+      "cosine": -0.0913
+    },
+    {
+      "a": 2,
+      "b": 6,
+      "cosine": -0.0745
+    },
+    {
+      "a": 2,
+      "b": 7,
+      "cosine": -0.3086
+    },
+    {
+      "a": 3,
+      "b": 4,
+      "cosine": 0.0
+    },
+    {
+      "a": 3,
+      "b": 5,
+      "cosine": 0.1195
+    },
+    {
+      "a": 3,
+      "b": 6,
+      "cosine": 0.2928
+    },
+    {
+      "a": 3,
+      "b": 7,
+      "cosine": -0.101
+    },
+    {
+      "a": 4,
+      "b": 5,
+      "cosine": 0.1754
+    },
+    {
+      "a": 4,
+      "b": 6,
+      "cosine": -0.1432
+    },
+    {
+      "a": 4,
+      "b": 7,
+      "cosine": -0.2224
+    },
+    {
+      "a": 5,
+      "b": 6,
+      "cosine": 0.1633
+    },
+    {
+      "a": 5,
+      "b": 7,
+      "cosine": 0.0
+    },
+    {
+      "a": 6,
+      "b": 7,
+      "cosine": 0.276
+    }
+  ],
+  "selected": {
+    "semantic_bridge": [
+      {
+        "a": 6,
+        "b": 7,
+        "cosine": 0.276,
+        "score": 0.88
+      },
+      {
+        "a": 3,
+        "b": 6,
+        "cosine": 0.2928,
+        "score": 0.7749
+      },
+      {
+        "a": 5,
+        "b": 6,
+        "cosine": 0.1633,
+        "score": 0.7297
+      }
+    ],
+    "analogical_transfer": [
+      {
+        "a": 1,
+        "b": 4,
+        "cosine": 0.4903,
+        "score": 0.4903
+      },
+      {
+        "a": 3,
+        "b": 2,
+        "cosine": 0.4364,
+        "score": 0.4364
+      },
+      {
+        "a": 3,
+        "b": 6,
+        "cosine": 0.2928,
+        "score": 0.2928
+      }
+    ],
+    "dialectic_synthesis": []
+  }
+}

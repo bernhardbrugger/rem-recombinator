@@ -27,6 +27,14 @@ python -m rem_recombinator evaluate examples/evaluation_labels.example.json
 
 `evaluate` reports precision and recall for the similarity thresholds. It does not change the defaults.
 
-`.env`, `*.db`, and `memories/*.json` are gitignored. API keys stay local.
+`.env`, `*.db`, and `memories/*.json` are gitignored. API keys stay local. Personal chats are not part of the public repository.
+
+The public demonstration is a GitHub Pages site over the fictional sample, plus one local command that registers an MCP server for whichever chat client you use:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bernhardbrugger/rem-recombinator/main/install.sh | bash
+```
+
+The install writes a private SQLite file under your home directory and does not upload it. See [Public demonstration](rem-recombinator/README.md#public-demonstration).
 
 A GitHub Action runs the offline example cycle every night at 02:15 UTC (03:15 Europe/Berlin in winter) and uploads `nightly-out/` as an artifact. See [Nightly run](rem-recombinator/README.md#nightly-run).

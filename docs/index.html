@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>REM Recombinator — public demonstration</title>
+  <meta name="description" content="A reproducible procedure for recombining knowledge fragments. The public page uses a seven-sentence fictional corpus. Personal chats stay on your machine.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,550;6..72,650&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="site.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%23f4f0e6' width='32' height='32'/%3E%3Ccircle cx='10' cy='18' r='3' fill='%230f6e56'/%3E%3Ccircle cx='22' cy='12' r='3' fill='%238c3b1e'/%3E%3Cpath d='M12 17 L20 13' stroke='%231c1914' stroke-width='1.4'/%3E%3C/svg%3E">
+</head>
+<body>
+  <header class="mast">
+    <div class="wrap">
+      <p class="kicker"><span>Public demonstration</span><span>Fictional corpus · no personal records</span></p>
+      <h1>REM Recombinator</h1>
+      <p class="deck">A procedure that proposes a few collisions between weakly related notes, then rejects almost all of them by a rule you can recompute.</p>
+      <p class="privacy"><strong>Your chats are not on this page.</strong> The repository, the nightly artifact, and this site contain seven invented sentences. The install command writes a database under your home directory and does not upload it.</p>
+    </div>
+  </header>
+  <div class="wrap">
+    <nav class="toc" aria-label="Sections">
+      <a href="#claim">Claim</a>
+      <a href="#procedure">Procedure</a>
+      <a href="#geometry">Geometry</a>
+      <a href="#decision">Decision rule</a>
+      <a href="#install">One command</a>
+    </nav>
+
+    <section id="claim">
+      <h2><span>01</span>What is being claimed</h2>
+      <p>The name is a computational sketch of REM sleep, not a claim about brains. During REM, weakly linked traces are reactivated together and most of those collisions are noise. This program does the analogous thing on purpose, on text you already have, and it writes down every choice.</p>
+      <div class="grid-3">
+        <article class="card">
+          <p class="num">Public</p>
+          <h3>Method and sample</h3>
+          <p>Selection rules, thresholds, the critic formula, and a seven-sentence corpus anyone can rerun. The hash embedder is a reproducibility stand-in. It is not evidence about meaning.</p>
+        </article>
+        <article class="card">
+          <p class="num">Private</p>
+          <h3>Your store</h3>
+          <p>SQLite at <span class="mono">~/.local/share/rem-recombinator/state/fragments.db</span>. The file is created on first use. It is gitignored. Nothing in the install reads a chat transcript.</p>
+        </article>
+        <article class="card">
+          <p class="num">Optional</p>
+          <h3>A remote model</h3>
+          <p>The installed server uses an offline template. Fragment text leaves the machine only if you later point <span class="mono">REM_EMBEDDER</span> or <span class="mono">REM_LLM</span> at an API and add keys.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="procedure">
+      <h2><span>02</span>Procedure</h2>
+      <p>Cosine similarity, with a zero vector defined as similarity 0:</p>
+      <pre class="formula">cos(u, v) = (u · v) / (||u|| ||v||)</pre>
+      <div class="grid-3">
+        <article class="card">
+          <p class="num">Semantic bridge</p>
+          <h3>Different clusters, near band</h3>
+          <p>Greedy leader clustering at link 0.55. A pair must sit in different clusters and in cosine [0.05, 0.35]. The score is the novelty of the normalized midpoint.</p>
+        </article>
+        <article class="card">
+          <p class="num">Analogical transfer</p>
+          <h3>Different domains</h3>
+          <p>Domains must differ, and neither may be unspecified. Inside cosine [0.15, 0.55] the score is the cosine itself: a shared direction across tags.</p>
+        </article>
+        <article class="card">
+          <p class="num">Dialectic synthesis</p>
+          <h3>A listed opposition</h3>
+          <p>A documented cue list, not an entailment check. Tension times closeness to cosine 0.45, and the pair must lie in [0.20, 0.75].</p>
+        </article>
+      </div>
+      <pre class="formula">m = normalize(normalize(u) + normalize(v))
+S = 1 − max cos(m, v_k)     over fragments other than the pair
+
+A hypothesis is dropped when its nearest neighbour is above 0.88 or below 0.05.
+The model does not set the accept bit.</pre>
+    </section>
+
+    <section id="geometry">
+      <h2><span>03</span>Geometry of the published corpus</h2>
+      <p id="reading">The figure is computed in the repository from <span class="mono">examples/sample_memory_export.json</span> and committed as <span class="mono">geometry.json</span>. Loading it fills the sentence below with the actual pairs.</p>
+      <div class="controls" id="strategies" role="group" aria-label="Selection rule"></div>
+      <div class="grid-2">
+        <figure>
+          <svg id="plot" class="plot" viewBox="0 0 640 460" role="img" aria-label="Principal-component plane of the fictional corpus"></svg>
+          <figcaption id="plot-caption">Figure 1. Loading the committed geometry.</figcaption>
+        </figure>
+        <div class="side" id="pairs"></div>
+      </div>
+      <figure>
+        <svg id="bands" class="bands" viewBox="0 0 640 168" role="img" aria-label="Cosine of every pair against the selected window"></svg>
+        <figcaption>Figure 2. Every pair in the fictional corpus, placed by cosine. Large marks are the pairs the selected rule keeps. The shaded interval is that rule’s window. Negative cosines fall outside every window. This axis is pair selection, not the novelty gate.</figcaption>
+      </figure>
+      <table>
+        <caption class="mono" style="caption-side: bottom; text-align: left; padding-top: 0.6rem; color: var(--muted);">Table 1. The entire public corpus. Ids match the figure.</caption>
+        <thead>
+          <tr><th>Id</th><th>Domain</th><th>Sentence</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td><i class="swatch d-physics"></i>physics</td><td>Heat always increases entropy in an isolated system.</td></tr>
+          <tr><td>2</td><td><i class="swatch d-physics"></i>physics</td><td>A feedback controller can decrease variance around a set point.</td></tr>
+          <tr><td>3</td><td><i class="swatch d-biology"></i>biology</td><td>Selection pressure can shrink diversity inside a local niche.</td></tr>
+          <tr><td>4</td><td><i class="swatch d-project"></i>project</td><td>Closed systems always increase entropy when heat flows in and no work leaves.</td></tr>
+          <tr><td>5</td><td><i class="swatch d-project"></i>project</td><td>Open systems can export entropy and so decrease it locally.</td></tr>
+          <tr><td>6</td><td><i class="swatch d-conversation"></i>conversation</td><td>Researchers keep a lab notebook so that a later reader can replay the conditions of an experiment.</td></tr>
+          <tr><td>7</td><td><i class="swatch d-conversation"></i>conversation</td><td>A claim without an observation that could refute it is not yet a hypothesis.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="decision">
+      <h2><span>04</span>The accept rule</h2>
+      <p>Four axes, each in [0, 1]. The composite is fixed. A report is accepted only when the composite clears 0.60 and every axis clears 0.30. The template model used by the public demo scores every axis at 0.50, so it accepts nothing. That is the gate working.</p>
+      <pre class="formula">C = 0.30 N + 0.30 L + 0.20 F + 0.20 U
+accept  ⟺  C ≥ 0.60  and  min(N, L, F, U) ≥ 0.30</pre>
+      <div class="presets">
+        <button type="button" id="preset-template">Template result</button>
+        <button type="button" id="preset-pass">Clears both gates</button>
+        <button type="button" id="preset-floor">Composite passes, one axis fails</button>
+      </div>
+      <form id="critic" class="critic">
+        <label>Novelty <input id="novelty" type="range" min="0" max="1" step="0.01" value="0.5"> <output data-out="novelty">0.50</output></label>
+        <label>Coherence <input id="coherence" type="range" min="0" max="1" step="0.01" value="0.5"> <output data-out="logical_coherence">0.50</output></label>
+        <label>Falsifiability <input id="falsifiability" type="range" min="0" max="1" step="0.01" value="0.5"> <output data-out="falsifiability">0.50</output></label>
+        <label>Cross-domain utility <input id="utility" type="range" min="0" max="1" step="0.01" value="0.5"> <output data-out="cross_domain_utility">0.50</output></label>
+      </form>
+      <p id="verdict" class="verdict" role="status"></p>
+    </section>
+
+    <section id="install">
+      <h2><span>05</span>One command, any MCP chat</h2>
+      <p>The chat program does not matter, as long as it can launch a local stdio server. Cursor and Claude Desktop are registered when their config directories exist. Every other host can use the same command, which the installer also writes to <span class="mono">mcp-snippet.json</span>.</p>
+      <div class="cmdbox">
+        <code id="command" class="cmd">curl -fsSL https://raw.githubusercontent.com/<wbr>bernhardbrugger/<wbr>rem-recombinator/<wbr>main/<wbr>install.sh | bash</code>
+        <button type="button" id="copy">Copy</button>
+      </div>
+      <ol class="steps">
+        <li>Run the command. It clones the repository under <span class="mono">~/.local/share/rem-recombinator</span>, creates a virtualenv, and links <span class="mono">rem-recombinator</span> onto <span class="mono">~/.local/bin</span>.</li>
+        <li>Restart the chat client. The server is named <span class="mono">rem-recombinator</span>. It does not open your transcripts.</li>
+        <li>When you want a corpus, import a file that already lives on the machine. A Claude memories export, a neutral JSON list, or a folder of notes all work. A hidden file in that folder is skipped.</li>
+      </ol>
+      <pre class="formula">rem-recombinator import ./fragments.json --embedder hashing
+rem-recombinator import ./notes/ --embedder hashing
+rem-recombinator demo</pre>
+      <p><span class="mono">fragments.json</span> is <span class="mono">{"fragments": [{"text": "...", "domain": "physics"}]}</span>. In a directory, the folder name is the domain. <span class="mono">demo</span> reruns the fictional sample in a temporary database and does not open your store. The source is <a href="https://github.com/bernhardbrugger/rem-recombinator">github.com/bernhardbrugger/rem-recombinator</a>.</p>
+    </section>
+
+    <footer>
+      <p>Thresholds on this page are the repository defaults. The plane is regenerated by <span class="mono">scripts/build_demo_geometry.py</span> and checked in tests against that function. A nightly Action reruns the same fictional cycle; it does not grow a personal memory.</p>
+    </footer>
+  </div>
+  <script src="site.js"></script>
+</body>
+</html>

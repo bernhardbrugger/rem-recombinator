@@ -1,6 +1,8 @@
-"""Import a Claude memory export into the fragment store.
+"""Import local notes into the fragment store.
 
-The export shape (Settings, Privacy, Export data, category "memories") is::
+Three shapes are accepted. None of them is uploaded by this module.
+
+A Claude memories export (Settings, Privacy, Export data)::
 
     {
       "conversations_memory": "<markdown>",
@@ -9,8 +11,17 @@ The export shape (Settings, Privacy, Export data, category "memories") is::
       "account_uuid": "..."
     }
 
-The file may be raw JSON or a zip that contains one JSON file. Extraction is
-pure; embedding and storage happen only when an embedder and a store are passed.
+A model-neutral fragment list, as a JSON object or a bare list::
+
+    {"fragments": [{"text": "...", "domain": "physics"}]}
+
+A directory or a single ``.txt`` / ``.md`` file. Paragraphs longer than 20
+characters become fragments. In a directory, the first folder name is the
+domain, so notes from any chat export can be dropped in as plain text.
+
+A Claude export may be raw JSON or a zip that contains one JSON file.
+Extraction is pure; embedding and storage happen only when an embedder and a
+store are passed.
 """
 
 from __future__ import annotations
@@ -34,9 +45,11 @@ class ImportReport:
     samples: list[dict[str, str]] = field(default_factory=list)
 
 
-def load_export(path: Path) -> dict:
+def load_export(path: Path) -> dict | list:
     if not path.exists():
         raise FileNotFoundError(f"export file not found: {path}")
+    if path.is_dir():
+        raise ValueError(f"{path} is a directory; import it with load_fragment_records")
     if path.suffix == ".zip":
         with zipfile.ZipFile(path) as archive:
             names = [name for name in archive.namelist() if name.endswith(".json")]
@@ -44,6 +57,24 @@ def load_export(path: Path) -> dict:
                 raise ValueError(f"no .json file found inside {path}")
             return json.loads(archive.read(names[0]))
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_fragment_records(path: Path) -> list[dict[str, str]]:
+    """Read fragments from a Claude export, a neutral JSON file, text, or a directory."""
+    if path.is_dir():
+        return _records_from_directory(path)
+    if path.suffix.lower() in {".txt", ".md"}:
+        domain = path.stem or "notes"
+        return _records_from_text(path, domain=domain, source="text_file", origin=path.name)
+    data = load_export(path)
+    if isinstance(data, list):
+        return _records_from_generic(data)
+    if not isinstance(data, dict):
+        raise ValueError("import file must be JSON, a text file, or a directory")
+    generic = data.get("fragments")
+    if isinstance(generic, list):
+        return _records_from_generic(generic)
+    return extract_fragments(data)
 
 
 def extract_fragments(data: dict) -> list[dict[str, str]]:
@@ -144,8 +175,7 @@ def run(
     *,
     dry_run: bool = False,
 ) -> ImportReport:
-    data = load_export(Path(export_path))
-    fragments = extract_fragments(data)
+    fragments = load_fragment_records(Path(export_path))
     if dry_run:
         by_source: dict[str, int] = {}
         for fragment in fragments:
@@ -165,3 +195,67 @@ def run(
 def _split_paragraphs(text: str) -> list[str]:
     parts = re.split(r"\n\s*\n", text)
     return [part.strip() for part in parts if len(part.strip()) > 20]
+
+
+def _records_from_generic(items: list) -> list[dict[str, str]]:
+    records: list[dict[str, str]] = []
+    for index, item in enumerate(items):
+        if not isinstance(item, dict):
+            raise ValueError(f"fragments[{index}] must be an object with a text field")
+        text = " ".join(str(item.get("text") or "").split())
+        if len(text) <= 10:
+            continue
+        records.append(
+            {
+                "text": text,
+                "source": _clean_source(item.get("source")),
+                "domain": _clean_domain(item.get("domain")),
+                "origin": str(item.get("origin") or f"fragments[{index}]")[:200],
+            }
+        )
+    return records
+
+
+def _records_from_directory(root: Path) -> list[dict[str, str]]:
+    records: list[dict[str, str]] = []
+    files = [
+        path
+        for path in root.rglob("*")
+        if path.is_file()
+        and path.suffix.lower() in {".txt", ".md"}
+        and not any(part.startswith(".") for part in path.relative_to(root).parts)
+    ]
+    for path in sorted(files):
+        relative = path.relative_to(root)
+        domain = relative.parts[0] if len(relative.parts) >= 2 else path.stem
+        records.extend(
+            _records_from_text(path, domain=domain, source="text_file", origin=relative.as_posix())
+        )
+    return records
+
+
+def _records_from_text(path: Path, *, domain: str, source: str, origin: str) -> list[dict[str, str]]:
+    text = path.read_text(encoding="utf-8")
+    return [
+        {
+            "text": paragraph,
+            "source": source,
+            "domain": _clean_domain(domain),
+            "origin": origin,
+        }
+        for paragraph in _split_paragraphs(text)
+    ]
+
+
+def _clean_domain(value: object) -> str:
+    text = " ".join(str(value or "").split())
+    if not text:
+        return "unspecified"
+    return text[:80]
+
+
+def _clean_source(value: object) -> str:
+    text = str(value or "fragment").strip().lower().replace(" ", "_")
+    if re.fullmatch(r"[a-z0-9_\-]{1,40}", text):
+        return text
+    return "fragment"

@@ -217,3 +217,36 @@ def load_config(environ: dict[str, str] | None = None) -> ExperimentConfig:
     )
     config.validate_ranges()
     return config
+
+
+def embedder_name(environ: dict[str, str] | None = None) -> str:
+    """Which embedder the local server should construct.
+
+    An explicit ``REM_EMBEDDER`` wins. Otherwise a Voyage key selects the
+    remote model, and a missing key stays on the offline hash. The hash is
+    the default for a fresh install so a chat client can call the tools
+    without sending text to an embedding API.
+    """
+    source = os.environ if environ is None else environ
+    explicit = source.get("REM_EMBEDDER", "").strip()
+    if explicit:
+        return explicit
+    if source.get("VOYAGE_API_KEY", "").strip():
+        return "voyage"
+    return "hashing"
+
+
+def llm_name(environ: dict[str, str] | None = None) -> str:
+    """Which language model the local server should construct.
+
+    An explicit ``REM_LLM`` wins. Otherwise an Anthropic key selects the
+    remote model, and a missing key stays on the offline template. The
+    template does not call a network.
+    """
+    source = os.environ if environ is None else environ
+    explicit = source.get("REM_LLM", "").strip()
+    if explicit:
+        return explicit
+    if source.get("ANTHROPIC_API_KEY", "").strip():
+        return "anthropic"
+    return "template"
