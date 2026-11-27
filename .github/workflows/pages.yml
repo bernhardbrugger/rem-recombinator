@@ -1,6 +1,6 @@
 # Serves docs/ as the public demonstration. The directory contains only the
-# fictional sample geometry. Enable Settings → Pages → Source: GitHub Actions
-# once; this workflow does the rest on main.
+# fictional sample geometry. configure-pages turns the site on when it is
+# missing and selects GitHub Actions as the source.
 name: Pages
 
 on:
@@ -29,6 +29,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+        with:
+          # Create the Pages site and select GitHub Actions as the source
+          # when the repository has not been switched on yet.
+          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs

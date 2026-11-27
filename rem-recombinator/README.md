@@ -225,7 +225,7 @@ rem-recombinator demo
 
 `fragments.json` is `{"fragments": [{"text": "...", "domain": "physics"}]}`. A directory of `.md` or `.txt` files uses the folder name as the domain. `demo` runs the fictional sample in a temporary database and does not open your store.
 
-The page is [`docs/`](../docs/index.html). After merge, GitHub serves it once Pages is set to **GitHub Actions** (Settings, Pages, Source). The workflow is [`.github/workflows/pages.yml`](../.github/workflows/pages.yml). The address is `https://bernhardbrugger.github.io/rem-recombinator/`.
+The page is [`docs/`](../docs/index.html). The workflow [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) publishes it and turns GitHub Pages on if the site does not exist yet. The address is `https://bernhardbrugger.github.io/rem-recombinator/`. If GitHub refuses that token, set Settings → Pages → Source to GitHub Actions and rerun the workflow.
 
 ## Nightly run
 
