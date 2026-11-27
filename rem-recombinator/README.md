@@ -202,7 +202,38 @@ python -m rem_recombinator import /path/to/memories-export.json --embedder voyag
 python -m rem_recombinator run --strategy semantic_bridge --n 5 --seed 0
 ```
 
-`--llm template` is the offline stand-in. On the sample export it keeps two candidates and accepts none, because every template axis is 0.5 and the composite 0.50 is below 0.60. That is the gate working, not a successful scientific recombination. `--verbose` prints the pair-selection log on stderr.
+`--llm template` is the offline stand-in. On the sample export it keeps two candidates and accepts none, because every template axis is 0.5 and the composite 0.50 is below 0.60. That is the gate working, not a successful scientific recombination. `--verbose` prints the pair-selection log on stderr. Put it before the subcommand: `python -m rem_recombinator --verbose run …`.
+
+## Nightly run
+
+GitHub Actions runs the same cycle every night and on demand. The workflow is [`.github/workflows/nightly.yml`](../.github/workflows/nightly.yml). The schedule is 02:15 UTC, which is 03:15 Europe/Berlin in winter and 04:15 in summer. GitHub may start it later, and it turns the schedule off after 60 days without a commit.
+
+The scheduled run is the offline example: fictional `examples/sample_memory_export.json`, hashing embedder, template model, seed 0. It does not read `.env` and it does not commit the database. Each night starts from an empty runner disk. The markdown report, JSON export, stats, and that night's sample database are uploaded as the artifact `nightly-cycle` and kept for 14 days.
+
+Locally, the same steps are:
+
+```bash
+bash scripts/nightly_example.sh
+```
+
+That writes `nightly-out/`, which is gitignored. A run looks like this:
+
+```text
+cycle embedder=hashing llm=template strategy=all n=3 seed=0
+Extracted 7 fragments
+Added 7. Skipped 0 already stored.
+Run 1: 2 candidates, 0 accepted.
+- #1 semantic_bridge kept parents=[6, 7] score=0.500
+- #2 analogical_transfer kept parents=[1, 4] score=0.500
+Candidates: 2 (accepted 0)
+Mean critique (parsed reports):
+  composite_score: 0.500
+wrote nightly-out/nightly.md
+```
+
+Zero accepted candidates is the expected example result. The template critic sits at 0.50, under the 0.60 accept threshold.
+
+**Actions → Nightly cycle → Run workflow** can also choose `live`. That mode calls Voyage and Anthropic and needs the repository secrets `ANTHROPIC_API_KEY` and `VOYAGE_API_KEY`. It still imports only the fictional sample. This repository is public, and artifacts are visible to anyone who can read the repository, so do not point the workflow at a personal memory export. A store that should grow from night to night also needs storage outside the git tree; this workflow deliberately does not keep one.
 
 Extraction from a Claude memories export:
 

@@ -28,3 +28,5 @@ python -m rem_recombinator evaluate examples/evaluation_labels.example.json
 `evaluate` reports precision and recall for the similarity thresholds. It does not change the defaults.
 
 `.env`, `*.db`, and `memories/*.json` are gitignored. API keys stay local.
+
+A GitHub Action runs the offline example cycle every night at 02:15 UTC (03:15 Europe/Berlin in winter) and uploads `nightly-out/` as an artifact. See [Nightly run](rem-recombinator/README.md#nightly-run).
