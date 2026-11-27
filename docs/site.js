@@ -1,39 +1,50 @@
-const COLORS = {
-  physics: "#0f6e56",
-  biology: "#8c3b1e",
-  project: "#1e4d7b",
-  conversation: "#8a6a2f",
-};
-
-const STRATEGIES = [
-  ["semantic_bridge", "Semantic bridge"],
-  ["analogical_transfer", "Analogical transfer"],
-  ["dialectic_synthesis", "Dialectic synthesis"],
-];
-
-const FALLBACK = {
-  accept: 0.6,
-  axis_floor: 0.3,
-  weights: { novelty: 0.3, logical_coherence: 0.3, falsifiability: 0.2, cross_domain_utility: 0.2 },
-};
-
-let geometry = null;
-let strategy = "semantic_bridge";
-let pinned = null;
+const MARK = { physics: "circle", biology: "square", project: "triangle", conversation: "diamond" };
+const DURATION = 18000;
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const plot = document.querySelector("#plot");
-const pairList = document.querySelector("#pairs");
-const caption = document.querySelector("#plot-caption");
 const bands = document.querySelector("#bands");
-const strategyButtons = document.querySelector("#strategies");
+const protocol = document.querySelector("#protocol");
+const readout = document.querySelector("#readout");
+const legend = document.querySelector("#legend");
+const bead = document.querySelector("#bead");
+const pauseButton = document.querySelector("#pause");
+
+let geometry = null;
+let paused = reduceMotion;
+let pauseStarted = 0;
+let elapsedAtPause = 0;
+let origin = performance.now();
+let holdCritic = false;
+let phaseName = "";
+let marks = [];
+let bandDots = [];
+let bandWindow = null;
+let link = null;
+let ghost = null;
+
+function clamp(value, lo, hi) {
+  return Math.min(hi, Math.max(lo, value));
+}
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+function ease(t) {
+  const x = clamp(t, 0, 1);
+  return x * x * (3 - 2 * x);
+}
+
+function clock() {
+  if (paused) return elapsedAtPause;
+  const t = (performance.now() - origin) % DURATION;
+  return reduceMotion ? 5200 : t;
+}
 
 function point(fragment) {
   const pad = 46;
-  const width = 640;
-  const height = 460;
   return [
-    pad + ((fragment.x + 1) / 2) * (width - pad * 2),
-    pad + ((1 - fragment.y) / 2) * (height - pad * 2),
+    pad + ((fragment.x + 1) / 2) * (640 - pad * 2),
+    36 + ((1 - fragment.y) / 2) * (320 - 28),
   ];
 }
 
@@ -41,142 +52,266 @@ function byId(id) {
   return geometry.fragments.find((fragment) => fragment.id === id);
 }
 
-function renderStrategies() {
-  strategyButtons.innerHTML = "";
-  for (const [key, label] of STRATEGIES) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = label;
-    button.setAttribute("aria-pressed", String(key === strategy));
-    button.addEventListener("click", () => {
-      strategy = key;
-      pinned = null;
-      renderStrategies();
-      renderPlot();
-      renderBands();
-    });
-    strategyButtons.appendChild(button);
-  }
+function phase(t) {
+  if (t < 2200) return "enter";
+  if (t < 6800) return "semantic_bridge";
+  if (t < 11200) return "analogical_transfer";
+  if (t < 14000) return "dialectic_synthesis";
+  return "critic";
 }
 
-function renderPlot() {
-  const selected = geometry.selected[strategy] || [];
-  const active = new Set(selected.flatMap((pair) => [pair.a, pair.b]));
-  const parts = [
-    `<rect width="640" height="460" fill="#fbf8f1"></rect>`,
-    `<line x1="46" y1="230" x2="594" y2="230" stroke="#d5ccbc"></line>`,
-    `<line x1="320" y1="46" x2="320" y2="414" stroke="#d5ccbc"></line>`,
-  ];
-  for (const pair of selected) {
-    const left = point(byId(pair.a));
-    const right = point(byId(pair.b));
-    parts.push(
-      `<line x1="${left[0]}" y1="${left[1]}" x2="${right[0]}" y2="${right[1]}" stroke="#1c1914" stroke-width="1.4"></line>`
-    );
+function local(t, start, end) {
+  return clamp((t - start) / (end - start), 0, 1);
+}
+
+function addMark(fragment) {
+  const node = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  const kind = MARK[fragment.domain] || "circle";
+  const s = 5;
+  let shape;
+  if (kind === "square") {
+    shape = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    shape.setAttribute("x", -s);
+    shape.setAttribute("y", -s);
+    shape.setAttribute("width", s * 2);
+    shape.setAttribute("height", s * 2);
+  } else if (kind === "triangle") {
+    shape = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    shape.setAttribute("points", `0,${-s - 1} ${s + 1},${s} ${-s - 1},${s}`);
+  } else if (kind === "diamond") {
+    shape = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    shape.setAttribute("points", `0,${-s - 1} ${s + 1},0 0,${s + 1} ${-s - 1},0`);
+  } else {
+    shape = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    shape.setAttribute("r", s);
   }
-  for (const fragment of geometry.fragments) {
-    const [x, y] = point(fragment);
-    const color = COLORS[fragment.domain] || "#1c1914";
-    const emphasized = active.has(fragment.id);
-    const radius = emphasized ? 8 : 5.5;
-    const mark = pinned === fragment.id ? ` stroke="#1c1914" stroke-width="2"` : "";
-    parts.push(
-      `<circle class="dot" data-id="${fragment.id}" cx="${x}" cy="${y}" r="${radius}" fill="${color}"${mark}></circle>`
-    );
-    parts.push(
-      `<text x="${x + 12}" y="${y + 4}" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" fill="#1c1914" stroke="#fbf8f1" stroke-width="3" paint-order="stroke">${fragment.id}</text>`
-    );
+  shape.setAttribute("fill", "#000");
+  const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  label.setAttribute("x", 8);
+  label.setAttribute("y", -7);
+  label.setAttribute("font-family", "Latin Modern Roman, serif");
+  label.setAttribute("font-size", "13");
+  label.textContent = String(fragment.id);
+  node.append(shape, label);
+  node.setAttribute("opacity", "0");
+  plot.querySelector("#marks").append(node);
+  return { fragment, node };
+}
+
+function buildScene() {
+  const grid = plot.querySelector("#grid");
+  grid.innerHTML = `<line x1="46" y1="188" x2="594" y2="188" stroke="#000" stroke-width="0.6"/>
+    <line x1="320" y1="28" x2="320" y2="348" stroke="#000" stroke-width="0.6"/>`;
+  const links = plot.querySelector("#links");
+  ghost = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  ghost.setAttribute("stroke", "#000");
+  ghost.setAttribute("stroke-width", "0.6");
+  ghost.setAttribute("opacity", "0");
+  link = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  link.setAttribute("stroke", "#000");
+  link.setAttribute("stroke-width", "1.15");
+  link.setAttribute("opacity", "0");
+  links.append(ghost, link);
+  marks = geometry.fragments.map(addMark);
+  legend.textContent = "circle physics    square biology    triangle project    diamond conversation";
+
+  const width = 640;
+  const height = 150;
+  const left = 28;
+  const right = 612;
+  const axisY = 96;
+  bands.innerHTML = "";
+  bandWindow = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  bandWindow.setAttribute("y", "28");
+  bandWindow.setAttribute("height", "58");
+  bandWindow.setAttribute("fill", "#000");
+  bandWindow.setAttribute("opacity", "0.08");
+  bands.append(bandWindow);
+  const axis = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  axis.setAttribute("x1", left);
+  axis.setAttribute("x2", right);
+  axis.setAttribute("y1", axisY);
+  axis.setAttribute("y2", axisY);
+  axis.setAttribute("stroke", "#000");
+  bands.append(axis);
+  for (const tick of [-0.2, 0, 0.2, 0.4, 0.6, 0.8, 1]) {
+    const x = scaleCos(tick, left, right);
+    const mark = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    mark.setAttribute("x1", x);
+    mark.setAttribute("x2", x);
+    mark.setAttribute("y1", axisY);
+    mark.setAttribute("y2", axisY + 6);
+    mark.setAttribute("stroke", "#000");
+    bands.append(mark);
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", x);
+    label.setAttribute("y", "124");
+    label.setAttribute("text-anchor", "middle");
+    label.setAttribute("font-family", "Latin Modern Mono, ui-monospace, monospace");
+    label.setAttribute("font-size", "11");
+    label.textContent = tick.toFixed(1);
+    bands.append(label);
   }
-  plot.innerHTML = parts.join("");
-  plot.querySelectorAll(".dot").forEach((dot) => {
-    dot.style.cursor = "pointer";
-    dot.addEventListener("click", () => {
-      pinned = Number(dot.getAttribute("data-id"));
-      renderPlot();
-      renderPairs();
-    });
+  bandDots = geometry.pairs.map((pair) => {
+    const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    dot.setAttribute("cy", "78");
+    dot.setAttribute("r", "3");
+    dot.setAttribute("fill", "#000");
+    bands.append(dot);
+    return { pair, dot, left, right };
   });
-  const variance = geometry.explained_variance;
-  const shown = variance.map((value) => `${(value * 100).toFixed(1)}%`).join(" and ");
-  caption.textContent =
-    `Figure 1. ${geometry.disclaimer} The plane keeps ${shown} of the hash variance. ` +
-    `Lines are the highest-scoring eligible pairs for the selected rule, at most three. ` +
-    (selected.length
-      ? `${selected.length} pair${selected.length === 1 ? "" : "s"} qualify.`
-      : "No pair meets this rule.");
-  renderPairs();
 }
 
-function renderPairs() {
-  const selected = geometry.selected[strategy] || [];
-  const pinnedFragment = pinned ? byId(pinned) : null;
-  const head = pinnedFragment
-    ? `<h3>${pinnedFragment.id}. ${pinnedFragment.domain}</h3><p>${pinnedFragment.text}</p>`
-    : `<h3>${labelFor(strategy)}</h3><p>Click a point. The number is the fragment id in the public table.</p>`;
-  const rows = selected
-    .map((pair) => {
-      const left = byId(pair.a);
-      const right = byId(pair.b);
-      return `<div class="pair"><b>${pair.a} × ${pair.b}</b> · cosine ${pair.cosine.toFixed(4)} · score ${pair.score.toFixed(4)}<br>${left.domain}: ${left.text}<br>${right.domain}: ${right.text}</div>`;
-    })
-    .join("");
-  pairList.innerHTML = head + (rows || `<div class="pair">The lexical opposition list and the cosine window do not fire together on this sample.</div>`);
-}
-
-function labelFor(key) {
-  return STRATEGIES.find((item) => item[0] === key)[1];
-}
-
-function renderBands() {
-  const thresholds = geometry.thresholds;
-  const windows = {
-    semantic_bridge: thresholds.bridge,
-    analogical_transfer: thresholds.analogy,
-    dialectic_synthesis: thresholds.dialectic,
-  };
+function scaleCos(value, left, right) {
   const min = -0.4;
   const max = 1;
-  const width = 640;
-  const height = 168;
-  const left = 16;
-  const right = 624;
-  const scale = (value) => left + ((value - min) / (max - min)) * (right - left);
-  const window = windows[strategy];
-  const selectedKeys = new Set((geometry.selected[strategy] || []).map((pair) => `${pair.a}-${pair.b}`));
-  const parts = [`<rect width="${width}" height="${height}" fill="#fbf8f1"></rect>`];
-  parts.push(
-    `<rect x="${scale(window[0])}" y="28" width="${scale(window[1]) - scale(window[0])}" height="78" fill="#d7ebe4"></rect>`
-  );
-  parts.push(`<line x1="${left}" y1="108" x2="${right}" y2="108" stroke="#1c1914"></line>`);
-  for (const tick of [-0.2, 0, 0.2, 0.4, 0.6, 0.8, 1]) {
-    const x = scale(tick);
-    parts.push(`<line x1="${x}" y1="108" x2="${x}" y2="114" stroke="#1c1914"></line>`);
-    parts.push(
-      `<text x="${x}" y="132" text-anchor="middle" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" fill="#5c564c">${tick.toFixed(1)}</text>`
-    );
+  return left + ((value - min) / (max - min)) * (right - left);
+}
+
+function sentenceFor(name, pair) {
+  if (name === "enter") return "Place the seven fragments of the public hash.";
+  if (name === "dialectic_synthesis") {
+    return "Dialectic synthesis. No pair is both lexically opposed and inside [0.20, 0.75].";
   }
-  for (const pair of geometry.pairs) {
-    const x = scale(pair.cosine);
-    const on = selectedKeys.has(`${pair.a}-${pair.b}`) || selectedKeys.has(`${pair.b}-${pair.a}`);
-    parts.push(
-      `<circle cx="${x}" cy="${on ? 62 : 86}" r="${on ? 5 : 3}" fill="${on ? "#1c1914" : "#8a8175"}"></circle>`
-    );
+  if (name === "critic") {
+    return "Template critic. N = L = F = U = 0.50, so C = 0.500. Reject.";
   }
-  parts.push(
-    `<text x="16" y="22" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="12" fill="#1c1914">${labelFor(strategy)} window [${window[0].toFixed(2)}, ${window[1].toFixed(2)}]</text>`
-  );
-  bands.innerHTML = parts.join("");
+  if (!pair) return "";
+  if (name === "semantic_bridge") {
+    return `Semantic bridge. Pair (${pair.a}, ${pair.b}), cosine ${pair.cosine.toFixed(4)}, midpoint score ${pair.score.toFixed(4)}. Kept.`;
+  }
+  return `Analogical transfer. Pair (${pair.a}, ${pair.b}), cosine ${pair.cosine.toFixed(4)}. The score is the cosine. Kept.`;
+}
+
+function setProtocol(name, pair, t, start) {
+  const full = sentenceFor(name, pair);
+  if (phaseName !== name) {
+    phaseName = name;
+    protocol.setAttribute("aria-label", full);
+  }
+  if (reduceMotion || paused && holdCritic) {
+    protocol.textContent = full;
+    return;
+  }
+  const count = Math.floor(local(t, start, start + 900) * full.length);
+  protocol.textContent = full.slice(0, count);
+}
+
+function placeLink(line, a, b, progress) {
+  const [x1, y1] = point(a);
+  const [x2, y2] = point(b);
+  const len = Math.hypot(x2 - x1, y2 - y1) || 1;
+  line.setAttribute("x1", x1);
+  line.setAttribute("y1", y1);
+  line.setAttribute("x2", x2);
+  line.setAttribute("y2", y2);
+  line.setAttribute("stroke-dasharray", String(len));
+  line.setAttribute("stroke-dashoffset", String(len * (1 - progress)));
+  line.setAttribute("opacity", progress > 0 ? "1" : "0");
+  return [x1, y1, x2, y2, len];
+}
+
+function render(t) {
+  const name = phase(t);
+  const appearEnd = 2200;
+  marks.forEach((item, index) => {
+    const born = ease(local(t, index * 180, index * 180 + 420));
+    const show = t >= appearEnd ? 1 : born;
+    const [x, y] = point(item.fragment);
+    item.node.setAttribute("transform", `translate(${x} ${y}) scale(${0.2 + 0.8 * show})`);
+    item.node.setAttribute("opacity", String(show));
+  });
+
+  const windows = {
+    semantic_bridge: geometry.thresholds.bridge,
+    analogical_transfer: geometry.thresholds.analogy,
+    dialectic_synthesis: geometry.thresholds.dialectic,
+  };
+  let pair = null;
+  let progress = 0;
+  let beadU = 0;
+  let ghostPair = null;
+  if (name === "semantic_bridge" || name === "analogical_transfer") {
+    const start = name === "semantic_bridge" ? 2200 : 6800;
+    pair = geometry.selected[name][0];
+    progress = ease(local(t, start + 250, start + 1400));
+    const travel = local(t, start + 1400, start + 4200);
+    beadU = progress < 1 ? progress : 0.5 + 0.5 * Math.sin(travel * Math.PI * 2);
+  } else if (name === "dialectic_synthesis") {
+    const flashes = geometry.pairs.filter((item) => item.cosine < 0.2 || item.cosine > 0.75).slice(0, 6);
+    const step = Math.floor(local(t, 11200, 14000) * flashes.length);
+    ghostPair = flashes[Math.min(step, flashes.length - 1)];
+    progress = (local(t, 11200, 14000) * flashes.length) % 1;
+  }
+
+  ghost.setAttribute("opacity", "0");
+  if (pair) {
+    const [x1, y1, x2, y2] = placeLink(link, byId(pair.a), byId(pair.b), progress);
+    bead.setAttribute("cx", lerp(x1, x2, beadU));
+    bead.setAttribute("cy", lerp(y1, y2, beadU));
+    bead.setAttribute("opacity", progress > 0.05 ? "1" : "0");
+    const shown = pair.cosine * progress;
+    const score = pair.score * progress;
+    readout.textContent = name === "semantic_bridge"
+      ? `cos = ${shown.toFixed(4)}    S(m) = ${score.toFixed(4)}`
+      : `cos = ${shown.toFixed(4)}`;
+  } else if (ghostPair) {
+    placeLink(ghost, byId(ghostPair.a), byId(ghostPair.b), ease(progress));
+    link.setAttribute("opacity", "0");
+    bead.setAttribute("opacity", "0");
+    readout.textContent = "no eligible pair";
+  } else {
+    link.setAttribute("opacity", "0");
+    bead.setAttribute("opacity", "0");
+    readout.textContent = name === "critic" ? "C = 0.500    reject" : "";
+  }
+
+  const starts = { enter: 0, semantic_bridge: 2200, analogical_transfer: 6800, dialectic_synthesis: 11200, critic: 14000 };
+  setProtocol(name, pair, t, starts[name]);
+
+  const criticT = name === "critic" ? ease(local(t, 14200, 16000)) : 0;
+  if (!holdCritic) paintBars(criticT, criticT, criticT, criticT);
+  document.querySelectorAll("#eq-c .term").forEach((term, index) => {
+    term.classList.toggle("on", name === "critic" && criticT > (index + 1) / 5);
+  });
+
+  const active = name === "enter" ? "semantic_bridge" : name === "critic" ? "semantic_bridge" : name;
+  const window = windows[active];
+  const open = name === "enter" ? ease(local(t, 1600, 2200)) : 1;
+  const x0 = scaleCos(window[0], 28, 612);
+  const x1 = scaleCos(window[1], 28, 612);
+  bandWindow.setAttribute("x", x0);
+  bandWindow.setAttribute("width", (x1 - x0) * open);
+  const kept = new Set((geometry.selected[active] || []).slice(0, 1).map((item) => `${item.a}-${item.b}`));
+  bandDots.forEach((item) => {
+    const target = scaleCos(item.pair.cosine, item.left, item.right);
+    const from = scaleCos(0, item.left, item.right);
+    const slide = ease(local(t, 400, 2000));
+    const key = `${item.pair.a}-${item.pair.b}`;
+    const on = kept.has(key) || kept.has(`${item.pair.b}-${item.pair.a}`);
+    item.dot.setAttribute("cx", lerp(from, target, reduceMotion ? 1 : slide));
+    item.dot.setAttribute("cy", on ? "62" : "78");
+    item.dot.setAttribute("r", on ? "5.5" : "3");
+  });
+}
+
+function paintBars(n, l, f, u) {
+  const values = { n, l, f, u };
+  for (const [key, value] of Object.entries(values)) {
+    document.querySelector(`#fill-${key}`).style.width = `${value * 100}%`;
+    document.querySelector(`#num-${key}`).textContent = value.toFixed(2);
+  }
+  if (!holdCritic && phase(clock()) === "critic") {
+    setScores([0.5, 0.5, 0.5, 0.5], false);
+  }
 }
 
 function weights() {
-  return geometry ? geometry.thresholds.weights : FALLBACK.weights;
+  return geometry ? geometry.thresholds.weights : { novelty: 0.3, logical_coherence: 0.3, falsifiability: 0.2, cross_domain_utility: 0.2 };
 }
-
 function gates() {
-  if (!geometry) return FALLBACK;
-  return geometry.thresholds;
+  return geometry ? geometry.thresholds : { accept: 0.6, axis_floor: 0.3 };
 }
-
 function readScores() {
   return {
     novelty: Number(document.querySelector("#novelty").value),
@@ -185,7 +320,6 @@ function readScores() {
     cross_domain_utility: Number(document.querySelector("#utility").value),
   };
 }
-
 function renderCritic() {
   const scores = readScores();
   const w = weights();
@@ -193,40 +327,58 @@ function renderCritic() {
   for (const [name, value] of Object.entries(scores)) {
     document.querySelector(`[data-out="${name}"]`).textContent = value.toFixed(2);
   }
-  const composite =
-    scores.novelty * w.novelty +
-    scores.logical_coherence * w.logical_coherence +
-    scores.falsifiability * w.falsifiability +
-    scores.cross_domain_utility * w.cross_domain_utility;
-  const floorName = Object.entries(scores).find(([, value]) => value < gate.axis_floor);
-  const accept = composite >= gate.accept && !floorName;
-  const verdict = document.querySelector("#verdict");
-  verdict.className = `verdict ${accept ? "accept" : "reject"}`;
-  const formula =
-    `C = ${w.novelty.toFixed(2)}·${scores.novelty.toFixed(2)} + ${w.logical_coherence.toFixed(2)}·${scores.logical_coherence.toFixed(2)} + ${w.falsifiability.toFixed(2)}·${scores.falsifiability.toFixed(2)} + ${w.cross_domain_utility.toFixed(2)}·${scores.cross_domain_utility.toFixed(2)} = ${composite.toFixed(3)}`;
-  const because = accept
-    ? `Accept. C ≥ ${gate.accept.toFixed(2)} and every axis is at least ${gate.axis_floor.toFixed(2)}.`
-    : floorName
-      ? `Reject. ${floorName[0].replaceAll("_", " ")} is below the axis floor ${gate.axis_floor.toFixed(2)}, even when the composite clears ${gate.accept.toFixed(2)}.`
-      : `Reject. C is below ${gate.accept.toFixed(2)}.`;
-  verdict.textContent = `${formula}. ${because}`;
+  const composite = scores.novelty * w.novelty + scores.logical_coherence * w.logical_coherence
+    + scores.falsifiability * w.falsifiability + scores.cross_domain_utility * w.cross_domain_utility;
+  const weak = Object.entries(scores).find(([, value]) => value < gate.axis_floor);
+  const accept = composite + 1e-9 >= gate.accept && !weak;
+  const formula = `C = ${composite.toFixed(3)}`;
+  document.querySelector("#verdict").textContent = accept
+    ? `${formula}. Accept, because C >= ${gate.accept.toFixed(2)} and every axis is at least ${gate.axis_floor.toFixed(2)}.`
+    : weak
+      ? `${formula}. Reject, because ${weak[0].replaceAll("_", " ")} is below ${gate.axis_floor.toFixed(2)}.`
+      : `${formula}. Reject, because C is below ${gate.accept.toFixed(2)}.`;
 }
-
-function setScores(values) {
+function setScores(values, hold) {
   document.querySelector("#novelty").value = values[0];
   document.querySelector("#coherence").value = values[1];
   document.querySelector("#falsifiability").value = values[2];
   document.querySelector("#utility").value = values[3];
+  if (hold) holdCritic = true;
   renderCritic();
 }
 
-document.querySelectorAll("#critic input").forEach((input) => {
-  input.addEventListener("input", renderCritic);
-});
-document.querySelector("#preset-template").addEventListener("click", () => setScores([0.5, 0.5, 0.5, 0.5]));
-document.querySelector("#preset-pass").addEventListener("click", () => setScores([0.8, 0.75, 0.7, 0.65]));
-document.querySelector("#preset-floor").addEventListener("click", () => setScores([0.9, 0.9, 0.2, 0.9]));
+function tick() {
+  if (geometry) render(clock());
+  if (!paused) requestAnimationFrame(tick);
+}
 
+pauseButton.addEventListener("click", () => {
+  if (reduceMotion) return;
+  if (!paused) {
+    elapsedAtPause = clock();
+    paused = true;
+    pauseButton.textContent = "Play";
+  } else {
+    paused = false;
+    origin = performance.now() - elapsedAtPause;
+    pauseButton.textContent = "Pause";
+    requestAnimationFrame(tick);
+  }
+});
+if (reduceMotion) pauseButton.textContent = "Play";
+
+document.querySelectorAll("#critic input").forEach((input) => {
+  input.addEventListener("input", () => {
+    holdCritic = true;
+    if (!paused && !reduceMotion) pauseButton.click();
+    renderCritic();
+    const scores = readScores();
+    paintBars(scores.novelty, scores.logical_coherence, scores.falsifiability, scores.cross_domain_utility);
+  });
+});
+document.querySelector("#preset-template").addEventListener("click", () => setScores([0.5, 0.5, 0.5, 0.5], true));
+document.querySelector("#preset-pass").addEventListener("click", () => setScores([0.8, 0.75, 0.7, 0.65], true));
+document.querySelector("#preset-floor").addEventListener("click", () => setScores([0.9, 0.9, 0.2, 0.9], true));
 document.querySelector("#copy").addEventListener("click", async () => {
   const command = document.querySelector("#command").textContent.trim();
   try {
@@ -246,20 +398,10 @@ fetch("geometry.json")
   })
   .then((payload) => {
     geometry = payload;
-    renderStrategies();
-    renderPlot();
-    renderBands();
+    buildScene();
     renderCritic();
-    const bridge = payload.selected.semantic_bridge[0];
-    const analogy = payload.selected.analogical_transfer[0];
-    const note = document.querySelector("#reading");
-    note.textContent =
-      `On this hash, the top semantic bridge is fragments ${bridge.a} and ${bridge.b} ` +
-      `(cosine ${bridge.cosine.toFixed(4)}, midpoint score ${bridge.score.toFixed(4)}). ` +
-      `The top analogy is fragments ${analogy.a} and ${analogy.b} (cosine ${analogy.cosine.toFixed(4)}). ` +
-      `Dialectic synthesis selects nothing: no pair is both lexically opposed and inside its cosine window. ` +
-      `These are properties of the offline hash, not of a semantic model.`;
+    requestAnimationFrame(tick);
   })
   .catch(() => {
-    caption.textContent = "The geometry file did not load. The table below is still the public corpus.";
+    protocol.textContent = "The geometry file did not load. Table 1 is still the public corpus.";
   });

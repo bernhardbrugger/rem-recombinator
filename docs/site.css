@@ -1,16 +1,33 @@
+@font-face {
+  font-family: "Latin Modern Roman";
+  src: url("fonts/lmroman-regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Latin Modern Roman";
+  src: url("fonts/lmroman-italic.woff") format("woff");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Latin Modern Roman";
+  src: url("fonts/lmroman-bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Latin Modern Mono";
+  src: url("fonts/lmmono-regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --paper: #f4f0e6;
-  --paper-2: #ebe4d4;
-  --ink: #1c1914;
-  --muted: #5c564c;
-  --rule: #d5ccbc;
-  --green: #0f6e56;
-  --green-soft: #d7ebe4;
-  --oxide: #8c3b1e;
-  --oxide-soft: #f3ddd4;
-  --blue: #1e4d7b;
-  --gold: #8a6a2f;
-  --shadow: 0 1px 0 rgba(28, 25, 20, 0.04);
   color-scheme: light;
 }
 
@@ -20,251 +37,238 @@ html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.35), transparent 220px),
-    var(--paper);
-  color: var(--ink);
-  font-family: Newsreader, "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
-  font-size: 1.125rem;
-  line-height: 1.55;
+  background: #fff;
+  color: #000;
+  font-family: "Latin Modern Roman", "Computer Modern", "CMU Serif", serif;
+  font-size: 12pt;
+  line-height: 1.38;
+  font-weight: 400;
 }
 
-body::before {
-  content: "";
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  opacity: 0.18;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.35'/></svg>");
+.paper {
+  width: min(6.4in, calc(100% - 1.4rem));
+  margin: 0.85in auto 1.1in;
 }
 
-a { color: var(--green); text-underline-offset: 0.16em; }
-
-code, .mono, button, input, .kicker, .cmd {
-  font-family: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+.titleblock { text-align: center; margin: 0 0 1.35em; }
+.titleblock h1 {
+  margin: 0;
+  font-size: 17pt;
+  font-weight: 700;
+  line-height: 1.15;
+}
+.titleblock p {
+  text-indent: 0;
+  text-align: center;
+}
+.titleblock .subtitle {
+  margin: 0.55em 0 0;
+  font-size: 12pt;
+}
+.titleblock .meta {
+  margin: 0.85em 0 0;
+  font-size: 11pt;
 }
 
-.wrap, .card, figure, .cmdbox, .formula {
-  min-width: 0;
-  max-width: 100%;
+.abstract {
+  margin: 0 0.55in 1.3em;
+  font-size: 10.5pt;
+  line-height: 1.35;
 }
-
-.wrap {
-  width: min(1080px, calc(100% - 2.5rem));
-  margin: 0 auto;
+.abstract h2 {
+  margin: 0 0 0.45em;
+  text-align: center;
+  font-size: 10.5pt;
+  font-weight: 700;
 }
+.abstract p { margin: 0; text-align: justify; hyphens: auto; }
 
-header.mast {
-  padding: 2.2rem 0 1.4rem;
-  border-bottom: 1px solid var(--ink);
+h2.section {
+  margin: 1.35em 0 0.55em;
+  font-size: 14pt;
+  font-weight: 700;
+  line-height: 1.2;
 }
+h2.section .no { margin-right: 0.55em; }
 
-.kicker {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--muted);
+p {
+  margin: 0 0 0.15em;
+  text-align: justify;
+  hyphens: auto;
+  text-indent: 1.5em;
 }
+h2.section + p,
+.abstract p,
+p.noindent,
+.remark p,
+figcaption,
+li { text-indent: 0; }
 
-h1 {
-  margin: 0.7rem 0 0.35rem;
-  font-weight: 650;
-  font-size: clamp(2.4rem, 6vw, 4.4rem);
-  letter-spacing: -0.03em;
-  line-height: 0.95;
-}
+a { color: #000; }
 
-.deck {
-  max-width: 38rem;
-  margin: 0.8rem 0 0;
-  font-size: 1.28rem;
-}
+.math i { font-style: italic; }
 
-.privacy {
-  margin: 1.4rem 0 0;
-  padding: 0.85rem 1rem;
-  background: var(--ink);
-  color: #f4f0e6;
-  font-size: 0.98rem;
-}
-
-.privacy strong { color: #fff; }
-
-nav.toc {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem 1rem;
-  padding: 0.8rem 0;
-  border-bottom: 1px solid var(--rule);
-  font-size: 0.95rem;
-}
-
-section { padding: 2.4rem 0 0.4rem; }
-
-h2 {
-  margin: 0 0 0.8rem;
-  font-size: 1.7rem;
-  font-weight: 650;
-  letter-spacing: -0.02em;
-}
-
-h2 span {
-  display: block;
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--muted);
-  font-weight: 500;
-}
-
-.grid-3, .grid-2 {
+.equation {
   display: grid;
-  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: last baseline;
+  column-gap: 1em;
+  margin: 0.85em 0 0.95em;
+  font-size: 12pt;
 }
+.equation .body { text-align: center; }
+.equation .line { display: block; white-space: nowrap; }
+.equation .eqno { text-align: right; }
+.equation .norm { font-style: normal; }
+.equation sub { font-style: italic; }
+.equation .term.on { border-bottom: 0.6pt solid #000; }
 
-.grid-3 { grid-template-columns: repeat(3, 1fr); }
-.grid-2 { grid-template-columns: 1.4fr 0.8fr; align-items: start; }
-
-.card, .formula, figure, .cmdbox {
-  background: rgba(255, 252, 246, 0.72);
-  border: 1px solid var(--rule);
-  box-shadow: var(--shadow);
+.remark {
+  margin: 0.9em 0 0.9em 1.6em;
 }
-
-.card { padding: 1rem 1.05rem 1.1rem; }
-.card h3 { margin: 0 0 0.4rem; font-size: 1.12rem; }
-.card p, figure p { margin: 0.4rem 0 0; }
-.card .num {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
-  color: var(--green);
-}
-
-.formula {
-  padding: 0.9rem 1rem;
-  overflow-x: auto;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 0.86rem;
-  line-height: 1.7;
+.remark .env {
+  font-weight: 700;
+  font-style: italic;
 }
 
 figure {
-  margin: 1rem 0 0;
-  padding: 0.8rem;
-}
-
-figcaption {
-  margin-top: 0.7rem;
-  color: var(--muted);
-  font-size: 0.95rem;
-}
-
-svg.plot, svg.bands { width: 100%; height: auto; display: block; background: #fbf8f1; }
-svg.plot { min-height: 280px; }
-
-.controls, .presets { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.7rem; }
-
-button {
+  margin: 1em 0 0.4em;
+  padding: 0;
+  border: 0;
   background: transparent;
-  color: var(--ink);
-  border: 1px solid var(--ink);
-  padding: 0.35rem 0.6rem;
-  font-size: 0.75rem;
-  letter-spacing: 0.02em;
+  box-shadow: none;
+}
+svg.plot, svg.bands {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #fff;
+}
+figcaption {
+  margin: 0.45em 0 0;
+  font-size: 10.5pt;
+  text-align: justify;
+  hyphens: auto;
+}
+figcaption .label { font-weight: 700; }
+
+.protocol {
+  margin: 0.7em 0 0;
+  min-height: 2.6em;
+  font-family: "Latin Modern Mono", ui-monospace, monospace;
+  font-size: 9.5pt;
+  line-height: 1.35;
+  white-space: pre-wrap;
+}
+
+.bars { margin: 0.35em 0 0; }
+.bars div {
+  display: grid;
+  grid-template-columns: 1.2em 1fr 3.2em;
+  gap: 0.45em;
+  align-items: center;
+  margin: 0.18em 0;
+  font-size: 10.5pt;
+}
+.track {
+  display: block;
+  height: 0.42em;
+  border-bottom: 0.7pt solid #000;
+  position: relative;
+}
+.fill {
+  position: absolute;
+  left: 0;
+  bottom: -0.7pt;
+  height: 0.42em;
+  width: 0;
+  background: #000;
+}
+
+.controls {
+  margin: 0.35em 0 0;
+  font-size: 10.5pt;
+}
+button {
+  font-family: "Latin Modern Roman", serif;
+  font-size: 10.5pt;
+  color: #000;
+  background: #fff;
+  border: 0.7pt solid #000;
+  border-radius: 0;
+  padding: 0.02em 0.45em 0.08em;
   cursor: pointer;
 }
-
-button[aria-pressed="true"], button.primary {
-  background: var(--ink);
-  color: var(--paper);
-}
-
 button:focus-visible, a:focus-visible, input:focus-visible {
-  outline: 2px solid var(--green);
+  outline: 0.8pt solid #000;
   outline-offset: 2px;
 }
-
-.side { padding: 0.2rem 0.2rem 0 0.4rem; }
-.side h3 { margin: 0.2rem 0; font-size: 1.05rem; }
-.pair {
-  border-top: 1px solid var(--rule);
-  padding: 0.55rem 0;
-  font-size: 0.98rem;
-}
-.pair b { font-weight: 650; }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.98rem;
+  margin: 0.4em 0 0.2em;
+  font-size: 10.5pt;
 }
+caption {
+  caption-side: top;
+  text-align: left;
+  padding: 0 0 0.35em;
+  font-size: 10.5pt;
+}
+caption .label { font-weight: 700; }
+thead { border-top: 1.1pt solid #000; border-bottom: 0.5pt solid #000; }
+tbody tr:last-child { border-bottom: 1.1pt solid #000; }
 th, td {
   text-align: left;
   vertical-align: top;
-  padding: 0.45rem 0.5rem 0.45rem 0;
-  border-bottom: 1px solid var(--rule);
+  font-weight: 400;
+  padding: 0.22em 0.7em 0.22em 0;
+  border: 0;
 }
-th {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-  font-weight: 500;
-}
+th { font-style: italic; }
 
-.swatch {
-  display: inline-block;
-  width: 0.7rem;
-  height: 0.7rem;
-  margin-right: 0.35rem;
-  border-radius: 50%;
-  transform: translateY(0.05rem);
+ol.steps { margin: 0.4em 0 0.6em; padding-left: 1.4em; }
+ol.steps li { margin: 0.2em 0; text-align: justify; hyphens: auto; }
+
+.verbatim {
+  margin: 0.7em 0;
+  padding: 0.35em 0 0.35em 0.2em;
+  font-family: "Latin Modern Mono", ui-monospace, monospace;
+  font-size: 10.5pt;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
-.d-physics { background: var(--green); }
-.d-biology { background: var(--oxide); }
-.d-project { background: var(--blue); }
-.d-conversation { background: var(--gold); }
 
 .critic label {
   display: grid;
-  grid-template-columns: 11rem 1fr 3.2rem;
-  gap: 0.6rem;
+  grid-template-columns: 8.2em 1fr 3em;
+  gap: 0.5em;
   align-items: center;
-  margin: 0.45rem 0;
+  margin: 0.28em 0;
+  font-size: 11pt;
 }
-input[type="range"] { width: 100%; accent-color: var(--green); }
-.verdict {
-  margin-top: 0.8rem;
-  padding: 0.8rem 0.9rem;
-  font-size: 1.05rem;
+input[type="range"] { width: 100%; accent-color: #000; }
+
+.decision {
+  margin: 0.7em 0 0;
+  text-indent: 0;
+  font-style: italic;
 }
-.verdict.accept { background: var(--green-soft); }
-.verdict.reject { background: var(--oxide-soft); }
-
-.cmdbox { padding: 0.85rem 1rem; display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
-.cmd { font-size: 0.82rem; overflow-wrap: anywhere; white-space: pre-wrap; }
-
-ol.steps { margin: 0.6rem 0 0; padding-left: 1.2rem; }
-ol.steps li { margin: 0.35rem 0; }
 
 footer {
-  margin-top: 2.5rem;
-  padding: 1.2rem 0 2.4rem;
-  border-top: 1px solid var(--ink);
-  color: var(--muted);
-  font-size: 0.95rem;
+  margin-top: 2em;
+  padding-top: 0.6em;
+  border-top: 0.6pt solid #000;
+  font-size: 9.5pt;
 }
+footer p { text-indent: 0; margin: 0.2em 0; }
 
-@media (max-width: 800px) {
-  .grid-3, .grid-2, .critic label { grid-template-columns: 1fr; }
-  .cmdbox { flex-direction: column; align-items: stretch; }
-  .kicker { flex-direction: column; }
+@media (max-width: 640px) {
+  .paper { margin: 1.1rem auto 2rem; }
+  .abstract { margin-left: 0; margin-right: 0; }
+  .equation { font-size: 11pt; }
+  .equation .line { white-space: normal; }
+  .critic label { grid-template-columns: 1fr; }
 }
