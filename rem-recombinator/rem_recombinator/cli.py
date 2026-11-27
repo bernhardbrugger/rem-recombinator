@@ -13,6 +13,7 @@ from pathlib import Path
 from rem_recombinator.config import STRATEGY_CHOICES, ExperimentConfig, load_config
 from rem_recombinator.diagnostics import similarity_sample, summarize
 from rem_recombinator.embeddings import build_embedder
+from rem_recombinator.evaluation import load_label_file, render_report
 from rem_recombinator.exporting import render_json, render_markdown
 from rem_recombinator.llm import build_language_model
 from rem_recombinator.recombinator import execute_run
@@ -56,6 +57,12 @@ def main(argv: list[str] | None = None) -> int:
     diagnose_parser.add_argument("--samples", type=int, default=2000)
     diagnose_parser.add_argument("--seed", type=int, default=0)
 
+    evaluate_parser = sub.add_parser(
+        "evaluate",
+        help="Score selection and novelty thresholds against a label file. Does not change defaults.",
+    )
+    evaluate_parser.add_argument("labels", type=Path)
+
     args = parser.parse_args(argv)
     logging.basicConfig(
         stream=sys.stderr,
@@ -79,7 +86,9 @@ def main(argv: list[str] | None = None) -> int:
             return _lineage(args, config)
         if args.command == "diagnose":
             return _diagnose(args, config)
-    except (FileNotFoundError, ValueError, RuntimeError) as exc:
+        if args.command == "evaluate":
+            return _evaluate(args, config)
+    except (FileNotFoundError, KeyError, ValueError, RuntimeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     raise AssertionError(f"unhandled command {args.command}")
@@ -186,6 +195,13 @@ def _lineage(args: argparse.Namespace, config: ExperimentConfig) -> int:
         "Appears in candidates: "
         + (", ".join(str(item) for item in payload["candidate_ids"]) or "none")
     )
+    return 0
+
+
+def _evaluate(args: argparse.Namespace, config: ExperimentConfig) -> int:
+    labels = load_label_file(args.labels)
+    with Store(config.db_path) as store:
+        print(render_report(store, config, labels))
     return 0
 
 
